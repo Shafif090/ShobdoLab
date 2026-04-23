@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      window.FontAwesomeConfig = { autoReplaceSvg: "nest" };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ShobdoLab – Sign Up</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer" />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+            colors: {
+              brand: {
+                bg: "#FAFAFA",
+                text: "#111827",
+                orange: "#F47C7C",
+                blue: "#8E9BFA",
+                green: "#A1E8AF",
+                yellow: "#FFC800",
+                purple: "#E9D5FF",
+                border: "#E5E7EB",
+              },
+            },
+            boxShadow: {
+              soft: "0 4px 20px -2px rgba(0,0,0,0.05)",
+              card: "0 2px 10px rgba(0,0,0,0.02)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #fafafa;
+        font-family: "Inter", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      .bg-grid {
+        background-size: 40px 40px;
+        background-image:
+          linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      }
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      .brand-input:focus {
+        outline: none;
+        border-color: #8e9bfa;
+        box-shadow: 0 0 0 3px rgba(142, 155, 250, 0.15);
+      }
+      .brand-input {
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .shape-circle {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid;
+        opacity: 0.18;
+        pointer-events: none;
+      }
+      .shape-tri {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 14px solid #ffc800;
+        opacity: 0.28;
+        pointer-events: none;
+      }
+
+      /* Strength bar */
+      .strength-segment {
+        height: 4px;
+        border-radius: 4px;
+        flex: 1;
+        background-color: #e5e7eb;
+        transition: background-color 0.3s;
+      }
+
+      /* Step indicator */
+      .step-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #e5e7eb;
+        transition:
+          background-color 0.3s,
+          transform 0.3s;
+      }
+      .step-dot.active {
+        background-color: #8e9bfa;
+        transform: scale(1.3);
+      }
+      .step-dot.done {
+        background-color: #a1e8af;
+      }
+    </style>
+  </head>
+
+  <body
+    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
+    <div
+      id="app-container"
+      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid">
+      <!-- Decorative shapes -->
+      <div
+        class="shape-circle w-4 h-4"
+        style="top: 100px; right: 20px; border-color: #8e9bfa"></div>
+      <div class="shape-tri" style="top: 180px; left: 16px"></div>
+      <div
+        class="absolute opacity-20 text-brand-orange text-lg pointer-events-none"
+        style="bottom: 260px; right: 16px">
+        <i class="fa-solid fa-star rotate-12"></i>
+      </div>
+      <div
+        class="shape-circle w-3 h-3"
+        style="bottom: 240px; left: 20px; border-color: #f47c7c"></div>
+
+      <!-- Header -->
+      <header
+        class="px-6 pt-12 pb-4 flex items-center justify-between bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+        <button
+          id="back-btn"
+          class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+          <i class="fa-solid fa-arrow-left text-sm"></i>
+        </button>
+        <span class="text-xl font-bold tracking-tight text-brand-text"
+          >Create Account</span
+        >
+        <!-- Step dots -->
+        <div class="flex items-center gap-1.5">
+          <div class="step-dot done" id="dot-1"></div>
+          <div class="step-dot active" id="dot-2"></div>
+          <div class="step-dot" id="dot-3"></div>
+        </div>
+      </header>
+
+      <!-- Main -->
+      <main
+        class="flex-1 overflow-y-auto no-scrollbar px-6 pt-8 pb-24 flex flex-col gap-6">
+        <!-- Brand mark -->
+        <div class="flex flex-col items-center gap-2">
+          <div
+            class="w-16 h-16 rounded-[20px] bg-brand-blue flex items-center justify-center shadow-[0_4px_0_0_#000] border-2 border-black">
+            <i class="fa-solid fa-user-plus text-2xl text-white"></i>
+          </div>
+          <h1
+            class="text-2xl font-extrabold text-brand-text tracking-tight mt-1">
+            Join ShobdoLab
+          </h1>
+          <p class="text-sm text-gray-500 font-medium text-center">
+            Start your language learning journey today.
+          </p>
+        </div>
+
+        <!-- Social signup -->
+        <div class="flex flex-col gap-3">
+          <button
+            class="w-full flex items-center justify-center gap-3 border-2 border-brand-border rounded-2xl py-3.5 bg-white hover:bg-gray-50 transition-colors font-semibold text-sm text-gray-700 shadow-sm">
+            <img
+              src="https://www.svgrepo.com/show/475656/google-color.svg"
+              alt="Google"
+              class="w-5 h-5" />
+            Sign up with Google
+          </button>
+        </div>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3">
+          <div class="flex-1 h-px bg-brand-border"></div>
+          <span
+            class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+            >or</span
+          >
+          <div class="flex-1 h-px bg-brand-border"></div>
+        </div>
+
+        <!-- Form -->
+        <div class="flex flex-col gap-4">
+          <!-- Name -->
+          <div class="flex flex-col gap-1.5">
+            <label
+              for="name"
+              class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+              >Full Name</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <i class="fa-regular fa-user text-sm"></i>
+              </span>
+              <input
+                id="name"
+                type="text"
+                placeholder="Your name"
+                class="brand-input w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
+                autocomplete="name" />
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="flex flex-col gap-1.5">
+            <label
+              for="email"
+              class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+              >Email</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <i class="fa-regular fa-envelope text-sm"></i>
+              </span>
+              <input
+                id="email"
+                type="email"
+                placeholder="your@email.com"
+                class="brand-input w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
+                autocomplete="email" />
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="flex flex-col gap-1.5">
+            <label
+              for="password"
+              class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+              >Password</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <i class="fa-solid fa-lock text-sm"></i>
+              </span>
+              <input
+                id="password"
+                type="password"
+                placeholder="Create a strong password"
+                class="brand-input w-full pl-10 pr-12 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
+                autocomplete="new-password" />
+              <button
+                id="toggle-pw"
+                type="button"
+                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors cursor-pointer"
+                aria-label="Toggle password visibility">
+                <i id="pw-icon" class="fa-regular fa-eye text-sm"></i>
+              </button>
+            </div>
+            <!-- Strength meter -->
+            <div id="strength-bar" class="flex gap-1.5 mt-1 px-0.5">
+              <div class="strength-segment" id="s1"></div>
+              <div class="strength-segment" id="s2"></div>
+              <div class="strength-segment" id="s3"></div>
+              <div class="strength-segment" id="s4"></div>
+            </div>
+            <p id="strength-label" class="text-xs text-gray-400 font-medium">
+              Enter a password to check strength
+            </p>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="flex flex-col gap-1.5">
+            <label
+              for="confirm-password"
+              class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+              >Confirm Password</label
+            >
+            <div class="relative">
+              <span
+                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+              </span>
+              <input
+                id="confirm-password"
+                type="password"
+                placeholder="Repeat your password"
+                class="brand-input w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
+                autocomplete="new-password" />
+              <span
+                id="match-icon"
+                class="absolute right-4 top-1/2 -translate-y-1/2 hidden">
+                <i class="fa-solid fa-circle-check text-brand-green"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terms -->
+        <div class="flex items-start gap-3">
+          <button
+            id="terms-check"
+            type="button"
+            class="w-6 h-6 rounded-md border-2 border-brand-border flex items-center justify-center shrink-0 mt-0.5 transition-colors bg-white"
+            aria-checked="false">
+            <i
+              class="fa-solid fa-check text-[10px] text-white hidden"
+              id="check-icon"></i>
+          </button>
+          <p class="text-xs text-gray-500 font-medium leading-relaxed">
+            I agree to ShobdoLab's
+            <a href="#" class="text-brand-blue font-semibold hover:underline"
+              >Terms of Service</a
+            >
+            and
+            <a href="#" class="text-brand-blue font-semibold hover:underline"
+              >Privacy Policy</a
+            >.
+          </p>
+        </div>
+
+        <!-- Create Account button -->
+        <div class="flex flex-col gap-4 pb-4">
+          <button
+            id="signup-btn"
+            type="button"
+            class="w-full text-left group relative">
+            <div
+              class="absolute inset-0 bg-brand-blue rounded-[20px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
+            <div
+              class="relative bg-brand-blue border-2 border-black rounded-[20px] py-4 flex items-center justify-center gap-2 transform group-hover:-translate-y-0.5 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
+              <span class="text-white font-extrabold text-base"
+                >Create Account</span
+              >
+              <i class="fa-solid fa-arrow-right text-white text-sm"></i>
+            </div>
+          </button>
+
+          <p class="text-center text-sm text-gray-500">
+            Already have an account?
+            <a
+              href="login.html"
+              class="text-brand-orange font-bold hover:underline"
+              >Sign in</a
+            >
+          </p>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // Password toggle
+      const pwInput = document.getElementById("password");
+      const pwIcon = document.getElementById("pw-icon");
+      document.getElementById("toggle-pw").addEventListener("click", () => {
+        const isText = pwInput.type === "text";
+        pwInput.type = isText ? "password" : "text";
+        pwIcon.className = isText
+          ? "fa-regular fa-eye text-sm"
+          : "fa-regular fa-eye-slash text-sm";
+      });
+
+      // Strength meter
+      const segments = ["s1", "s2", "s3", "s4"].map((id) =>
+        document.getElementById(id),
+      );
+      const colors = ["#F47C7C", "#FFC800", "#8E9BFA", "#A1E8AF"];
+      const labels = ["Too weak", "Weak", "Good", "Strong 💪"];
+
+      function getStrength(pw) {
+        let score = 0;
+        if (pw.length >= 8) score++;
+        if (/[A-Z]/.test(pw)) score++;
+        if (/[0-9]/.test(pw)) score++;
+        if (/[^A-Za-z0-9]/.test(pw)) score++;
+        return score;
+      }
+
+      pwInput.addEventListener("input", () => {
+        const val = pwInput.value;
+        const score = val.length === 0 ? 0 : getStrength(val);
+        const label = document.getElementById("strength-label");
+
+        segments.forEach((seg, i) => {
+          seg.style.backgroundColor = i < score ? colors[score - 1] : "#E5E7EB";
+        });
+
+        label.textContent =
+          val.length === 0
+            ? "Enter a password to check strength"
+            : labels[score - 1] || "";
+        label.style.color = score > 0 ? colors[score - 1] : "#9CA3AF";
+        checkMatch();
+      });
+
+      // Confirm match
+      const confirmPw = document.getElementById("confirm-password");
+      const matchIcon = document.getElementById("match-icon");
+
+      function checkMatch() {
+        if (confirmPw.value.length > 0 && confirmPw.value === pwInput.value) {
+          matchIcon.classList.remove("hidden");
+          confirmPw.style.borderColor = "#A1E8AF";
+        } else {
+          matchIcon.classList.add("hidden");
+          confirmPw.style.borderColor = "";
+        }
+      }
+      confirmPw.addEventListener("input", checkMatch);
+
+      // Goal selector
+      document.querySelectorAll(".goal-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".goal-btn").forEach((b) => {
+            b.classList.remove("border-brand-orange", "bg-brand-orange/10");
+            b.classList.add("border-brand-border", "bg-white");
+          });
+          btn.classList.remove("border-brand-border", "bg-white");
+          btn.classList.add("border-brand-orange", "bg-brand-orange/10");
+        });
+      });
+
+      // Terms checkbox
+      let termsChecked = false;
+      const termsBtn = document.getElementById("terms-check");
+      const checkIcon = document.getElementById("check-icon");
+      termsBtn.addEventListener("click", () => {
+        termsChecked = !termsChecked;
+        termsBtn.setAttribute("aria-checked", String(termsChecked));
+        if (termsChecked) {
+          termsBtn.style.backgroundColor = "#A1E8AF";
+          termsBtn.style.borderColor = "#A1E8AF";
+          checkIcon.classList.remove("hidden");
+        } else {
+          termsBtn.style.backgroundColor = "";
+          termsBtn.style.borderColor = "";
+          checkIcon.classList.add("hidden");
+        }
+      });
+
+      // Back button
+      document.getElementById("back-btn").addEventListener("click", () => {
+        window.location.href = "login.html";
+      });
+    </script>
+  </body>
+</html>
