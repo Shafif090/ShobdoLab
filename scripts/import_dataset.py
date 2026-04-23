@@ -32,7 +32,7 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "")
 
 # Keep non-API runtime settings in code.
 INPUT_FILE = "step4_final_fix.json"
-BATCH_SIZE = 500
+BATCH_SIZE = 100
 
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError(

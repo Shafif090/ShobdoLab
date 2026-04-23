@@ -175,6 +175,189 @@ CREATE TABLE quiz_attempts (
 CREATE INDEX idx_quiz_attempts_session ON quiz_attempts(session_id, submitted_at);
 
 
+-- ── 8.1 QUIZ ANSWER TRANSACTION ───────────────────────────────
+CREATE OR REPLACE FUNCTION record_quiz_answer(
+  p_user_id UUID,
+  p_session_id UUID,
+  p_quiz_item_id UUID,
+  p_word_id BIGINT,
+  p_user_answer TEXT,
+  p_is_correct BOOLEAN,
+  p_response_time_ms INT
+)
+RETURNS TABLE (
+  session_id UUID,
+  current_index INT,
+  correct_items INT,
+  incorrect_items INT,
+  status TEXT,
+  total_items INT,
+  started_at TIMESTAMPTZ,
+  ended_at TIMESTAMPTZ,
+  duration_ms BIGINT,
+  learning_set_id UUID,
+  learning_set_state TEXT
+) AS $$
+DECLARE
+  v_session quiz_sessions%ROWTYPE;
+  v_user_word user_words%ROWTYPE;
+  v_next_seen_count INT;
+  v_next_correct_count INT;
+  v_next_mistakes INT;
+  v_next_strength SMALLINT;
+  v_next_status TEXT;
+  v_next_review_at TIMESTAMPTZ;
+  v_next_current_index INT;
+  v_completed BOOLEAN;
+  v_ended_at TIMESTAMPTZ;
+  v_duration_ms BIGINT;
+  v_learning_set_state TEXT;
+BEGIN
+  SELECT * INTO v_session
+  FROM quiz_sessions
+  WHERE id = p_session_id AND user_id = p_user_id
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Quiz session not found for this user';
+  END IF;
+
+  IF v_session.status <> 'active' THEN
+    RAISE EXCEPTION 'Quiz session is not active';
+  END IF;
+
+  PERFORM 1
+  FROM quiz_items qi
+  WHERE qi.id = p_quiz_item_id AND qi.session_id = p_session_id;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Quiz item not found for this session';
+  END IF;
+
+  INSERT INTO quiz_attempts (
+    session_id,
+    quiz_item_id,
+    word_id,
+    user_answer,
+    is_correct,
+    response_time_ms
+  ) VALUES (
+    p_session_id,
+    p_quiz_item_id,
+    p_word_id,
+    p_user_answer,
+    p_is_correct,
+    p_response_time_ms
+  )
+  ON CONFLICT (session_id, quiz_item_id) DO NOTHING;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'This quiz item has already been answered';
+  END IF;
+
+  SELECT * INTO v_user_word
+  FROM user_words
+  WHERE user_id = p_user_id AND word_id = p_word_id;
+
+  v_next_seen_count := COALESCE(v_user_word.seen_count, 0) + 1;
+  v_next_correct_count := COALESCE(v_user_word.correct_count, 0) + CASE WHEN p_is_correct THEN 1 ELSE 0 END;
+  v_next_mistakes := COALESCE(v_user_word.mistakes, 0) + CASE WHEN p_is_correct THEN 0 ELSE 1 END;
+  v_next_strength := CASE
+    WHEN p_is_correct THEN LEAST(5, COALESCE(v_user_word.strength, 0) + 1)
+    ELSE GREATEST(0, COALESCE(v_user_word.strength, 0) - 1)
+  END;
+  v_next_status := CASE
+    WHEN v_next_strength >= 4 THEN 'mastered'
+    WHEN p_is_correct THEN 'review'
+    ELSE 'learning'
+  END;
+  v_next_review_at := CASE
+    WHEN p_is_correct THEN CASE
+      WHEN v_next_strength <= 0 THEN NOW() + INTERVAL '1 day'
+      WHEN v_next_strength = 1 THEN NOW() + INTERVAL '3 days'
+      WHEN v_next_strength = 2 THEN NOW() + INTERVAL '7 days'
+      WHEN v_next_strength = 3 THEN NOW() + INTERVAL '14 days'
+      ELSE NOW() + INTERVAL '30 days'
+    END
+    ELSE NOW() + INTERVAL '1 day'
+  END;
+
+  INSERT INTO user_words (
+    user_id,
+    word_id,
+    status,
+    strength,
+    mistakes,
+    correct_count,
+    seen_count,
+    last_seen_at,
+    next_review_at
+  ) VALUES (
+    p_user_id,
+    p_word_id,
+    v_next_status,
+    v_next_strength,
+    v_next_mistakes,
+    v_next_correct_count,
+    v_next_seen_count,
+    NOW(),
+    v_next_review_at
+  )
+  ON CONFLICT (user_id, word_id) DO UPDATE SET
+    status = EXCLUDED.status,
+    strength = EXCLUDED.strength,
+    mistakes = EXCLUDED.mistakes,
+    correct_count = EXCLUDED.correct_count,
+    seen_count = EXCLUDED.seen_count,
+    last_seen_at = EXCLUDED.last_seen_at,
+    next_review_at = EXCLUDED.next_review_at,
+    updated_at = NOW();
+
+  v_next_current_index := v_session.current_index + 1;
+  v_completed := v_next_current_index >= v_session.total_items;
+  v_ended_at := CASE WHEN v_completed THEN NOW() ELSE v_session.ended_at END;
+  v_duration_ms := CASE
+    WHEN v_completed THEN (EXTRACT(EPOCH FROM (v_ended_at - v_session.started_at)) * 1000)::BIGINT
+    ELSE v_session.duration_ms
+  END;
+
+  UPDATE quiz_sessions
+  SET
+    current_index = v_next_current_index,
+    correct_items = v_session.correct_items + CASE WHEN p_is_correct THEN 1 ELSE 0 END,
+    incorrect_items = v_session.incorrect_items + CASE WHEN p_is_correct THEN 0 ELSE 1 END,
+    status = CASE WHEN v_completed THEN 'completed' ELSE 'active' END,
+    ended_at = v_ended_at,
+    duration_ms = v_duration_ms
+  WHERE id = p_session_id;
+
+  IF v_completed AND v_session.source = 'learn' AND v_session.source_ref_id IS NOT NULL THEN
+    UPDATE learning_sets
+    SET state = 'completed'
+    WHERE id = v_session.source_ref_id AND user_id = p_user_id;
+
+    SELECT state INTO v_learning_set_state
+    FROM learning_sets
+    WHERE id = v_session.source_ref_id;
+  END IF;
+
+  RETURN QUERY
+  SELECT
+    v_session.id,
+    v_next_current_index,
+    v_session.correct_items + CASE WHEN p_is_correct THEN 1 ELSE 0 END,
+    v_session.incorrect_items + CASE WHEN p_is_correct THEN 0 ELSE 1 END,
+    CASE WHEN v_completed THEN 'completed' ELSE 'active' END,
+    v_session.total_items,
+    v_session.started_at,
+    v_ended_at,
+    v_duration_ms,
+    v_session.source_ref_id,
+    COALESCE(v_learning_set_state, NULL);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+
 -- ── 9. DAILY_USER_STATS ───────────────────────────────────────
 CREATE TABLE daily_user_stats (
   user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
