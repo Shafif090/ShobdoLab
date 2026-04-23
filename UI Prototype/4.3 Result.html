@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <script>
+      window.FontAwesomeConfig = {
+        autoReplaceSvg: "nest",
+      };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Language Learning - Quiz Completion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+      rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            colors: {
+              brand: {
+                bg: "#FAFAFA",
+                text: "#111827",
+                orange: "#F47C7C",
+                blue: "#8E9BFA",
+                green: "#A1E8AF",
+                yellow: "#FFC800",
+                purple: "#E9D5FF",
+                border: "#E5E7EB",
+              },
+            },
+            boxShadow: {
+              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
+              card: "0 2px 10px rgba(0, 0, 0, 0.02)",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #fafafa;
+        font-family: "Inter", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .bg-grid {
+        background-size: 40px 40px;
+        background-image:
+          linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+      }
+
+      .no-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .no-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* Floating shapes inspired by reference */
+      .shape-circle {
+        position: absolute;
+        border-radius: 50%;
+        border: 2px solid #f47c7c;
+        opacity: 0.2;
+      }
+      .shape-triangle {
+        position: absolute;
+        width: 0;
+        height: 0;
+        border-left: 8px solid transparent;
+        border-right: 8px solid transparent;
+        border-bottom: 14px solid #ffc800;
+        opacity: 0.3;
+      }
+
+      /* Wavy shape for score container */
+      .wavy-blob {
+        border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        animation: blob-bounce 5s infinite alternate;
+      }
+
+      @keyframes blob-bounce {
+        0% {
+          border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+        }
+        100% {
+          border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+        }
+      }
+
+      .star-burst {
+        clip-path: polygon(
+          50% 0%,
+          61% 35%,
+          98% 35%,
+          68% 57%,
+          79% 91%,
+          50% 70%,
+          21% 91%,
+          32% 57%,
+          2% 35%,
+          39% 35%
+        );
+      }
+    </style>
+  </head>
+  <body
+    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
+    <div
+      id="app-container"
+      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid pb-20">
+      <!-- Decorative Background Elements from Reference -->
+      <div class="shape-circle w-6 h-6 top-20 right-8"></div>
+      <div class="shape-triangle top-96 left-6"></div>
+      <div
+        class="absolute top-40 right-10 text-brand-blue opacity-20 text-2xl transform rotate-12">
+        <i class="fa-solid fa-star"></i>
+      </div>
+
+      <!-- Header Section -->
+      <header
+        id="header"
+        class="px-6 pt-12 pb-4 flex justify-between items-center bg-transparent relative z-50">
+        <div class="flex items-center gap-3 w-full justify-between">
+          <button
+            class="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-soft flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </button>
+          <h1 class="text-lg font-bold text-gray-800">Results</h1>
+          <button
+            class="w-10 h-10 rounded-full bg-white border border-gray-100 shadow-soft flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+            <i class="fa-solid fa-share-nodes text-sm"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main
+        id="main-content"
+        class="flex-1 overflow-y-auto no-scrollbar pb-32 px-6 pt-2 flex flex-col gap-6 relative z-10">
+        <!-- Summary Score Header -->
+        <div
+          id="summary-score"
+          class="flex flex-col items-center justify-center relative mt-4">
+          <h2
+            class="text-[2.5rem] font-black text-brand-orange leading-none text-center uppercase tracking-tighter drop-shadow-sm z-10">
+            QUIZ<br />COMPLETE!
+          </h2>
+
+          <div class="relative mt-8 mb-4">
+            <!-- Decorative starburst behind score -->
+            <div
+              class="absolute -inset-6 bg-brand-yellow/30 star-burst transform rotate-12 scale-110 z-0 opacity-50"></div>
+
+            <div
+              class="wavy-blob w-40 h-40 bg-brand-blue flex flex-col items-center justify-center shadow-[0_8px_30px_-4px_rgba(142,155,250,0.6)] relative z-10 border-4 border-white">
+              <span class="text-5xl font-black text-white drop-shadow-md"
+                >90%</span
+              >
+              <span
+                class="text-white/90 text-sm font-bold mt-1 uppercase tracking-wider"
+                >Score</span
+              >
+            </div>
+
+            <!-- Floating time badge -->
+            <div
+              class="absolute -bottom-2 -right-4 bg-white px-3 py-1.5 rounded-full border-2 border-brand-border shadow-soft z-20 flex items-center gap-1.5 transform rotate-3">
+              <i class="fa-regular fa-clock text-brand-orange text-xs"></i>
+              <span class="text-xs font-bold text-gray-800">1:05</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Metrics Grid -->
+        <div id="metrics-grid" class="grid grid-cols-2 gap-3 mt-4">
+          <!-- Correct -->
+          <div
+            class="bg-brand-green/20 border border-brand-green/30 rounded-[20px] p-4 flex flex-col items-center justify-center shadow-sm relative overflow-hidden group">
+            <div
+              class="absolute -right-2 -top-2 w-10 h-10 bg-brand-green/30 rounded-full opacity-50"></div>
+            <span class="text-2xl font-black text-gray-900">9</span>
+            <span
+              class="text-[10px] font-bold text-gray-600 uppercase tracking-wide mt-1"
+              >Correct</span
+            >
+          </div>
+          <!-- Incorrect -->
+          <div
+            class="bg-brand-orange/10 border border-brand-orange/20 rounded-[20px] p-4 flex flex-col items-center justify-center shadow-sm relative overflow-hidden">
+            <div
+              class="absolute -right-2 -top-2 w-10 h-10 bg-brand-orange/20 rounded-full opacity-50"></div>
+            <span class="text-2xl font-black text-gray-900">1</span>
+            <span
+              class="text-[10px] font-bold text-gray-600 uppercase tracking-wide mt-1"
+              >Incorrect</span
+            >
+          </div>
+        </div>
+
+        <!-- Review List (Compact Breakdown) -->
+        <div id="review-list" class="flex flex-col gap-3 mt-4">
+          <h3
+            class="text-sm font-bold text-gray-800 uppercase tracking-wider mb-1">
+            Quick Breakdown
+          </h3>
+
+          <!-- Incorrect Item -->
+          <div
+            class="bg-white border-2 border-brand-orange/20 rounded-[20px] p-4 shadow-soft flex items-start gap-4">
+            <div
+              class="w-8 h-8 rounded-full bg-brand-orange/10 text-brand-orange flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-xmark text-sm"></i>
+            </div>
+            <div class="flex-1">
+              <p class="text-xs font-bold text-gray-500 uppercase mb-1">
+                Perfidious
+              </p>
+              <p
+                class="text-sm font-bold text-gray-900 line-through decoration-brand-orange/50">
+                জনসমাবেশ
+              </p>
+              <p class="text-sm font-bold text-green-600 mt-1">বিশ্বাসঘাতক</p>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <!-- Primary Action Footer -->
+      <div
+        id="action-footer"
+        class="absolute bottom-20 left-0 w-full px-6 pb-10 py-4 bg-white/90 backdrop-blur-md border-t border-gray-100 z-40 flex flex-col gap-3">
+        <button
+          class="w-full bg-brand-blue text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(142,155,250,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
+          Test Again
+          <i class="fa-solid fa-arrow-rotate-right text-sm ml-1"></i>
+        </button>
+      </div>
+
+      <!-- Bottom Navigation Bar -->
+      <nav
+        id="bottom-nav"
+        class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
+        <a
+          href="1 Home Hub.html"
+          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-house text-lg"></i>
+          </div>
+          <span class="text-[10px] font-medium">Home</span>
+        </a>
+        <a
+          href="2 Learn.html"
+          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-book text-lg"></i>
+          </div>
+          <span class="text-[10px] font-medium">Learn</span>
+        </a>
+        <a
+          href="3 Revise.html"
+          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-rotate-right text-lg"></i>
+          </div>
+          <span class="text-[10px] font-medium">Revise</span>
+        </a>
+        <a
+          href="4 Exercise.html"
+          class="flex flex-col items-center gap-1 text-black">
+          <div
+            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-900">
+            <i class="fa-solid fa-dumbbell text-lg"></i>
+          </div>
+          <span class="text-[10px] font-semibold text-gray-900">Exercise</span>
+        </a>
+      </nav>
+    </div>
+  </body>
+</html>

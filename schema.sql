@@ -1,0 +1,313 @@
+-- =============================================================
+-- ShobdoLab's Database Schema
+-- =============================================================
+
+
+-- ── 1. WORDS ─────────────────────────────────────────────────
+CREATE TABLE words (
+  id         BIGINT PRIMARY KEY,
+  english    TEXT NOT NULL UNIQUE,
+  bangla     TEXT[] NOT NULL,
+  pos        TEXT[] NOT NULL DEFAULT '{}',
+  root       TEXT NOT NULL,
+  family_id  TEXT NOT NULL,
+  is_active  BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_words_family_id ON words(family_id);
+
+
+-- ── 2. USERS ──────────────────────────────────────────────────
+CREATE TABLE users (
+  id               UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  display_name     TEXT NULL,
+  streak_days      INT NOT NULL DEFAULT 0,
+  last_active_date DATE NULL,
+  timezone         TEXT NOT NULL DEFAULT 'UTC',
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Auto-create a user row when someone signs up
+CREATE OR REPLACE FUNCTION handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO users (id) VALUES (NEW.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+CREATE TRIGGER users_set_updated_at
+  BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+
+-- ── 3. USER_WORDS ─────────────────────────────────────────────
+CREATE TABLE user_words (
+  user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  word_id        BIGINT NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  status         TEXT NOT NULL DEFAULT 'learning'
+                   CHECK (status IN ('learning', 'review', 'mastered')),
+  strength       SMALLINT NOT NULL DEFAULT 0
+                   CHECK (strength BETWEEN 0 AND 5),
+  mistakes       INT NOT NULL DEFAULT 0,
+  correct_count  INT NOT NULL DEFAULT 0,
+  seen_count     INT NOT NULL DEFAULT 0,
+  last_seen_at   TIMESTAMPTZ NULL,
+  next_review_at TIMESTAMPTZ NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, word_id)
+);
+
+CREATE TRIGGER user_words_set_updated_at
+  BEFORE UPDATE ON user_words
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+CREATE INDEX idx_user_words_user_id     ON user_words(user_id);
+CREATE INDEX idx_user_words_next_review ON user_words(user_id, next_review_at);
+CREATE INDEX idx_user_words_strength    ON user_words(user_id, strength, mistakes);
+CREATE INDEX idx_user_words_status      ON user_words(user_id, status);
+
+
+-- ── 4. LEARNING_SETS ──────────────────────────────────────────
+CREATE TABLE learning_sets (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id      UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source       TEXT NOT NULL CHECK (source IN ('learn')),
+  set_index    INT NOT NULL,
+  total_words  INT NOT NULL,
+  state        TEXT NOT NULL DEFAULT 'ready'
+                 CHECK (state IN ('ready', 'in_quiz', 'completed', 'expired')),
+  generated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  expires_at   TIMESTAMPTZ NOT NULL
+);
+
+ALTER TABLE learning_sets
+  ADD CONSTRAINT uq_learning_sets_user_index UNIQUE (user_id, set_index);
+
+CREATE INDEX idx_learning_sets_user ON learning_sets(user_id, state, generated_at DESC);
+
+
+-- ── 5. LEARNING_SET_ITEMS ─────────────────────────────────────
+CREATE TABLE learning_set_items (
+  set_id      UUID NOT NULL REFERENCES learning_sets(id) ON DELETE CASCADE,
+  word_id     BIGINT NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  sequence_no INT NOT NULL,
+  family_id   TEXT NULL,
+  PRIMARY KEY (set_id, word_id)
+);
+
+ALTER TABLE learning_set_items
+  ADD CONSTRAINT uq_learning_set_items_order UNIQUE (set_id, sequence_no);
+
+
+-- ── 6. QUIZ_SESSIONS ──────────────────────────────────────────
+CREATE TABLE quiz_sessions (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  source          TEXT NOT NULL CHECK (source IN ('learn', 'revise', 'exercise')),
+  source_ref_id   UUID NULL,
+  mode            TEXT NOT NULL CHECK (mode IN ('mcq', 'typing', 'mixed')),
+  total_items     INT NOT NULL,
+  current_index   INT NOT NULL DEFAULT 0,
+  correct_items   INT NOT NULL DEFAULT 0,
+  incorrect_items INT NOT NULL DEFAULT 0,
+  status          TEXT NOT NULL DEFAULT 'active'
+                    CHECK (status IN ('active', 'completed', 'abandoned')),
+  retry_no        SMALLINT NOT NULL DEFAULT 0,
+  max_retries     SMALLINT NOT NULL DEFAULT 2,
+  started_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  ended_at        TIMESTAMPTZ NULL,
+  duration_ms     BIGINT NULL
+);
+
+CREATE INDEX idx_quiz_sessions_user ON quiz_sessions(user_id, started_at DESC);
+
+
+-- ── 7. QUIZ_ITEMS ─────────────────────────────────────────────
+CREATE TABLE quiz_items (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id       UUID NOT NULL REFERENCES quiz_sessions(id) ON DELETE CASCADE,
+  word_id          BIGINT NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  question_type    TEXT NOT NULL CHECK (question_type IN ('mcq', 'typing')),
+  prompt_direction TEXT NOT NULL CHECK (prompt_direction IN ('en_to_bn', 'bn_to_en')),
+  prompt_text      TEXT NOT NULL,
+  options          JSONB NULL,
+  accepted_answers JSONB NOT NULL,
+  sequence_no      INT NOT NULL
+);
+
+ALTER TABLE quiz_items
+  ADD CONSTRAINT uq_quiz_items_order UNIQUE (session_id, sequence_no);
+
+CREATE INDEX idx_quiz_items_session ON quiz_items(session_id, sequence_no);
+
+
+-- ── 8. QUIZ_ATTEMPTS ──────────────────────────────────────────
+CREATE TABLE quiz_attempts (
+  id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id       UUID NOT NULL REFERENCES quiz_sessions(id) ON DELETE CASCADE,
+  quiz_item_id     UUID NOT NULL REFERENCES quiz_items(id) ON DELETE CASCADE,
+  word_id          BIGINT NOT NULL REFERENCES words(id) ON DELETE CASCADE,
+  user_answer      TEXT NULL,
+  is_correct       BOOLEAN NOT NULL,
+  response_time_ms INT NULL,
+  submitted_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+  -- Prevents double-scoring the same item in the same session
+  UNIQUE (session_id, quiz_item_id)
+);
+
+CREATE INDEX idx_quiz_attempts_session ON quiz_attempts(session_id, submitted_at);
+
+
+-- ── 9. DAILY_USER_STATS ───────────────────────────────────────
+CREATE TABLE daily_user_stats (
+  user_id         UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  stat_date       DATE NOT NULL,
+  learned_count   INT NOT NULL DEFAULT 0,
+  revised_count   INT NOT NULL DEFAULT 0,
+  exercise_count  INT NOT NULL DEFAULT 0,
+  correct_count   INT NOT NULL DEFAULT 0,
+  incorrect_count INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (user_id, stat_date)
+);
+
+
+-- ── 10. NOTIFICATIONS ─────────────────────────────────────────
+CREATE TABLE notifications (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  title      TEXT NOT NULL,
+  body       TEXT NOT NULL,
+  is_read    BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_notifications_user ON notifications(user_id, is_read, created_at DESC);
+
+
+-- ── 11. ACHIEVEMENTS ──────────────────────────────────────────
+CREATE TABLE achievements (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  code        TEXT UNIQUE NOT NULL,
+  title       TEXT NOT NULL,
+  description TEXT NOT NULL
+);
+
+CREATE TABLE user_achievements (
+  user_id        UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  achievement_id UUID NOT NULL REFERENCES achievements(id) ON DELETE CASCADE,
+  awarded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, achievement_id)
+);
+
+
+-- ── 12. ROW LEVEL SECURITY ────────────────────────────────────
+
+-- words: public read only
+ALTER TABLE words ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "words_read" ON words FOR SELECT USING (true);
+
+-- users: own row only
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "users_select" ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "users_update" ON users FOR UPDATE USING (auth.uid() = id);
+
+-- user_words: own rows only
+ALTER TABLE user_words ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "uw_select" ON user_words FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "uw_insert" ON user_words FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "uw_update" ON user_words FOR UPDATE USING (auth.uid() = user_id);
+
+-- learning_sets: own rows only
+ALTER TABLE learning_sets ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ls_select" ON learning_sets FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "ls_insert" ON learning_sets FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "ls_update" ON learning_sets FOR UPDATE USING (auth.uid() = user_id);
+
+-- learning_set_items: accessible if user owns the parent set
+ALTER TABLE learning_set_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "lsi_select" ON learning_set_items FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM learning_sets
+    WHERE id = learning_set_items.set_id AND user_id = auth.uid()
+  )
+);
+CREATE POLICY "lsi_insert" ON learning_set_items FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM learning_sets
+    WHERE id = learning_set_items.set_id AND user_id = auth.uid()
+  )
+);
+
+-- quiz_sessions: own rows only
+ALTER TABLE quiz_sessions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "qs_select" ON quiz_sessions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "qs_insert" ON quiz_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "qs_update" ON quiz_sessions FOR UPDATE USING (auth.uid() = user_id);
+
+-- quiz_items: accessible if user owns the parent session
+ALTER TABLE quiz_items ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "qi_select" ON quiz_items FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM quiz_sessions
+    WHERE id = quiz_items.session_id AND user_id = auth.uid()
+  )
+);
+CREATE POLICY "qi_insert" ON quiz_items FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM quiz_sessions
+    WHERE id = quiz_items.session_id AND user_id = auth.uid()
+  )
+);
+
+-- quiz_attempts: accessible if user owns the parent session
+ALTER TABLE quiz_attempts ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "qa_select" ON quiz_attempts FOR SELECT USING (
+  EXISTS (
+    SELECT 1 FROM quiz_sessions
+    WHERE id = quiz_attempts.session_id AND user_id = auth.uid()
+  )
+);
+CREATE POLICY "qa_insert" ON quiz_attempts FOR INSERT WITH CHECK (
+  EXISTS (
+    SELECT 1 FROM quiz_sessions
+    WHERE id = quiz_attempts.session_id AND user_id = auth.uid()
+  )
+);
+
+-- daily_user_stats: own rows only
+ALTER TABLE daily_user_stats ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "dus_select" ON daily_user_stats FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "dus_insert" ON daily_user_stats FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "dus_update" ON daily_user_stats FOR UPDATE USING (auth.uid() = user_id);
+
+-- notifications: own rows only
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "notif_select" ON notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "notif_update" ON notifications FOR UPDATE USING (auth.uid() = user_id);
+
+-- achievements: public read
+ALTER TABLE achievements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ach_read" ON achievements FOR SELECT USING (true);
+
+-- user_achievements: own rows only
+ALTER TABLE user_achievements ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ua_select" ON user_achievements FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "ua_insert" ON user_achievements FOR INSERT WITH CHECK (auth.uid() = user_id);

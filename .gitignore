@@ -1,2 +1,11 @@
+architecture.md
+step*
 dataset.xlsx
-notes.md
+
+# Environment secrets
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
