@@ -1,9 +1,16 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <script>
+      window.FontAwesomeConfig = { autoReplaceSvg: "nest" };
+    </script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Language Learning - Exercise</title>
+    <title>ShobdoLab - Exercise</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -20,9 +27,7 @@
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
+            fontFamily: { sans: ["Inter", "sans-serif"] },
             colors: {
               brand: {
                 bg: "#FAFAFA",
@@ -36,8 +41,8 @@
               },
             },
             boxShadow: {
-              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
-              card: "0 2px 10px rgba(0, 0, 0, 0.02)",
+              soft: "0 4px 20px -2px rgba(0,0,0,0.05)",
+              card: "0 2px 10px rgba(0,0,0,0.02)",
             },
           },
         },
@@ -51,206 +56,251 @@
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
-
-      /* Grid background pattern */
       .bg-grid {
         background-size: 40px 40px;
         background-image:
           linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       }
-
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
-
       .mode-pill-active {
         background: #ffffff;
         color: #111827;
         font-weight: 700;
         box-shadow: 0 1px 4px rgba(17, 24, 39, 0.08);
       }
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        border-radius: 16px;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.15s;
+      }
+      .sidebar-link:hover {
+        background: #f9fafb;
+        color: #111827;
+      }
+      .sidebar-link.active {
+        background: rgba(244, 124, 124, 0.1);
+        color: #f47c7c;
+      }
+      .sidebar-link .icon {
+        width: 20px;
+        text-align: center;
+      }
     </style>
   </head>
-  <body
-    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
-    <!-- Mobile App Container -->
-    <div
-      id="app-container"
-      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid">
-      <!-- Header Section -->
-      <header
-        id="header"
-        class="px-6 pt-12 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
-        <div class="flex items-center gap-3">
-          <button
-            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
-            <i class="fa-solid fa-arrow-left text-sm"></i>
-          </button>
-          <h1 class="text-xl font-bold tracking-tight text-brand-text">
-            Exercise
-          </h1>
+  <body class="bg-brand-bg text-brand-text min-h-[100dvh] overflow-x-hidden">
+    <div id="app-container" class="flex min-h-[100dvh] bg-white bg-grid">
+      <!-- Sidebar -->
+      <aside
+        class="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-brand-border sticky top-0 h-screen shrink-0 overflow-y-auto">
+        <div class="p-6 flex flex-col gap-6 h-full">
+          <div class="flex items-center gap-3 pt-2">
+            <div
+              class="w-11 h-11 rounded-[14px] bg-brand-orange flex items-center justify-center shadow-[0_3px_0_0_#000] border-2 border-black shrink-0">
+              <i class="fa-solid fa-book-open text-white text-sm"></i>
+            </div>
+            <span class="text-xl font-extrabold tracking-tight text-brand-text"
+              >ShobdoLab</span
+            >
+          </div>
+          <nav class="flex flex-col gap-1 flex-1 mt-2">
+            <a href="1 Home Hub.html" class="sidebar-link"
+              ><i class="fa-solid fa-house icon"></i><span>Home</span></a
+            >
+            <a href="2 Learn.html" class="sidebar-link"
+              ><i class="fa-solid fa-book icon"></i><span>Learn</span></a
+            >
+            <a href="3 Revise.html" class="sidebar-link"
+              ><i class="fa-solid fa-rotate-right icon"></i
+              ><span>Revise</span></a
+            >
+            <a href="4 Exercise.html" class="sidebar-link active"
+              ><i class="fa-solid fa-dumbbell icon"></i><span>Exercise</span></a
+            >
+          </nav>
+          <div
+            class="bg-brand-purple/20 border border-brand-purple/30 rounded-2xl p-4 flex items-center gap-3">
+            <div
+              class="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
+              <i class="fa-solid fa-fire text-sm"></i>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">12-Day Streak!</p>
+              <p class="text-xs text-gray-500">Keep it up 🔥</p>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center gap-3">
+      </aside>
+
+      <!-- Content -->
+      <div
+        class="flex-1 flex flex-col md:overflow-y-auto min-h-[100dvh] md:min-h-0">
+        <!-- Header -->
+        <header
+          class="px-6 md:px-10 pt-12 md:pt-6 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+          <div class="flex items-center gap-3">
+            <button
+              class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors md:hidden">
+              <i class="fa-solid fa-arrow-left text-sm"></i>
+            </button>
+            <h1 class="text-xl font-bold tracking-tight text-brand-text">
+              Exercise
+            </h1>
+          </div>
           <button
             class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
             <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
           </button>
-        </div>
-      </header>
+        </header>
 
-      <!-- Main Content Area -->
-      <main
-        id="main-content"
-        class="flex-1 overflow-y-auto no-scrollbar pb-24 px-6 pt-6 flex flex-col gap-8">
-        <!-- Header Text -->
-        <div class="flex flex-col gap-1 text-center mt-4">
-          <h2 class="text-3xl font-extrabold text-gray-900">
-            Ready to Practice?
-          </h2>
-          <p class="text-sm text-gray-500">
-            Choose your preferred mode to begin.
-          </p>
-        </div>
+        <!-- Main -->
+        <main
+          class="flex-1 no-scrollbar pb-24 md:pb-12 px-6 md:px-10 pt-6 flex flex-col gap-8">
+          <div class="md:max-w-xl md:mx-auto w-full flex flex-col gap-8">
+            <div class="flex flex-col gap-1 text-center mt-4">
+              <h2 class="text-3xl font-extrabold text-gray-900">
+                Ready to Practice?
+              </h2>
+              <p class="text-sm text-gray-500">
+                Choose your preferred mode to begin.
+              </p>
+            </div>
 
-        <!-- Mode Selector (Segmented Control / Pills) -->
-        <div
-          id="mode-selector"
-          class="bg-gray-100/80 p-1.5 rounded-full flex gap-1 shadow-inner relative">
-          <!-- Active background pill (visual only, position managed by JS/CSS if needed, static here for simplicity) -->
-          <button
-            type="button"
-            data-mode="mcq"
-            class="mode-pill flex-1 py-3 text-sm font-medium text-gray-500 hover:text-gray-900 rounded-full transition-all flex items-center justify-center gap-2"
-            aria-selected="false">
-            <i class="fa-solid fa-list-ul text-brand-blue"></i>
-            MCQ
-          </button>
-          <button
-            type="button"
-            data-mode="mixed"
-            class="mode-pill mode-pill-active flex-1 py-3 text-sm font-bold rounded-full transition-all flex items-center justify-center gap-2"
-            aria-selected="true">
-            <i class="fa-solid fa-bolt text-brand-blue"></i>
-            Mixed
-          </button>
-          <button
-            type="button"
-            data-mode="typing"
-            class="mode-pill flex-1 py-3 text-sm font-medium text-gray-500 hover:text-gray-900 rounded-full transition-all flex items-center justify-center gap-2"
-            aria-selected="false">
-            <i class="fa-solid fa-keyboard text-brand-blue"></i>
-            Typing
-          </button>
-        </div>
-
-        <!-- Primary Action Area -->
-        <div
-          id="primary-action-card"
-          class="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-soft relative overflow-hidden mt-4">
-          <!-- Decorative background elements -->
-          <div
-            class="absolute -top-10 -right-10 w-32 h-32 bg-brand-orange/10 rounded-full blur-2xl"></div>
-          <div
-            class="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-blue/10 rounded-full blur-2xl"></div>
-
-          <!-- Icon/Illustration -->
-          <div
-            class="w-24 h-24 bg-brand-bg rounded-full flex items-center justify-center shadow-inner relative z-10 border border-gray-50">
+            <!-- Mode Selector -->
             <div
-              class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm text-brand-blue">
-              <i class="fa-solid fa-bolt text-3xl"></i>
+              id="mode-selector"
+              class="bg-gray-100/80 p-1.5 rounded-full flex gap-1 shadow-inner relative">
+              <button
+                type="button"
+                data-mode="mcq"
+                class="mode-pill flex-1 py-3 text-sm font-medium text-gray-500 hover:text-gray-900 rounded-full transition-all flex items-center justify-center gap-2"
+                aria-selected="false">
+                <i class="fa-solid fa-list-ul text-brand-blue"></i> MCQ
+              </button>
+              <button
+                type="button"
+                data-mode="mixed"
+                class="mode-pill mode-pill-active flex-1 py-3 text-sm font-bold rounded-full transition-all flex items-center justify-center gap-2"
+                aria-selected="true">
+                <i class="fa-solid fa-bolt text-brand-blue"></i> Mixed
+              </button>
+              <button
+                type="button"
+                data-mode="typing"
+                class="mode-pill flex-1 py-3 text-sm font-medium text-gray-500 hover:text-gray-900 rounded-full transition-all flex items-center justify-center gap-2"
+                aria-selected="false">
+                <i class="fa-solid fa-keyboard text-brand-blue"></i> Typing
+              </button>
+            </div>
+
+            <!-- Action Card -->
+            <div
+              id="primary-action-card"
+              class="bg-white border border-gray-100 rounded-3xl p-8 flex flex-col items-center gap-6 shadow-soft relative overflow-hidden mt-4">
+              <div
+                class="absolute -top-10 -right-10 w-32 h-32 bg-brand-orange/10 rounded-full blur-2xl"></div>
+              <div
+                class="absolute -bottom-10 -left-10 w-32 h-32 bg-brand-blue/10 rounded-full blur-2xl"></div>
+              <div
+                class="w-24 h-24 bg-brand-bg rounded-full flex items-center justify-center shadow-inner relative z-10 border border-gray-50">
+                <div
+                  class="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm text-brand-blue">
+                  <i class="fa-solid fa-bolt text-3xl"></i>
+                </div>
+              </div>
+              <div class="flex flex-col items-center gap-2 z-10 text-center">
+                <h3 id="practice-title" class="text-xl font-bold text-gray-900">
+                  Mixed Practice
+                </h3>
+                <div id="practice-meta" class="flex items-center gap-2 mt-1">
+                  <span
+                    class="bg-brand-purple/20 text-brand-text px-3 py-1 rounded-full text-xs font-bold border border-brand-purple/30 flex items-center gap-1.5">
+                    <i class="fa-regular fa-clock text-[10px]"></i> 5-8 mins
+                  </span>
+                  <span
+                    class="bg-brand-green/20 text-brand-text px-3 py-1 rounded-full text-xs font-bold border border-brand-green/30 flex items-center gap-1.5">
+                    <i class="fa-solid fa-layer-group text-[10px]"></i> 20 Items
+                  </span>
+                </div>
+              </div>
+              <button
+                id="start-button"
+                class="w-full bg-brand-orange text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(244,124,124,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2 mt-2 z-10 border border-brand-orange/20">
+                <span id="start-label">Start Test</span>
+                <i class="fa-solid fa-play text-sm ml-1"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center justify-between px-2 mt-2">
+              <span class="text-xs font-medium text-gray-500"
+                >Last session:
+                <strong class="text-gray-900">92% accuracy</strong></span
+              >
+              <span class="text-xs font-medium text-brand-blue"
+                >View History</span
+              >
             </div>
           </div>
-
-          <!-- Details -->
-          <div class="flex flex-col items-center gap-2 z-10 text-center">
-            <h3 id="practice-title" class="text-xl font-bold text-gray-900">
-              Mixed Practice
-            </h3>
-            <div id="practice-meta" class="flex items-center gap-2 mt-1">
-              <span
-                class="bg-brand-purple/20 text-brand-text px-3 py-1 rounded-full text-xs font-bold border border-brand-purple/30 flex items-center gap-1.5">
-                <i class="fa-regular fa-clock text-[10px]"></i> 5-8 mins
-              </span>
-              <span
-                class="bg-brand-green/20 text-brand-text px-3 py-1 rounded-full text-xs font-bold border border-brand-green/30 flex items-center gap-1.5">
-                <i class="fa-solid fa-layer-group text-[10px]"></i> 20 Items
-              </span>
-            </div>
-          </div>
-
-          <!-- Start Button -->
-          <button
-            id="start-button"
-            class="w-full bg-brand-orange text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(244,124,124,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2 mt-2 z-10 border border-brand-orange/20">
-            <span id="start-label">Start Test</span>
-            <i class="fa-solid fa-play text-sm ml-1"></i>
-          </button>
-        </div>
-
-        <!-- Optional secondary info or recent stats -->
-        <div class="flex items-center justify-between px-2 mt-2">
-          <span class="text-xs font-medium text-gray-500"
-            >Last session:
-            <strong class="text-gray-900">92% accuracy</strong></span
-          >
-          <span class="text-xs font-medium text-brand-blue">View History</span>
-        </div>
-      </main>
-
-      <!-- Bottom Navigation Bar -->
-      <nav
-        id="bottom-nav"
-        class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
-        <a
-          href="1 Home Hub.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-house text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Home</span>
-        </a>
-        <a
-          href="2 Learn.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-book text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Learn</span>
-        </a>
-        <a
-          href="3 Revise.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-rotate-right text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Revise</span>
-        </a>
-        <a
-          href="4 Exercise.html"
-          class="flex flex-col items-center gap-1 text-black">
-          <div
-            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-900">
-            <i class="fa-solid fa-dumbbell text-lg"></i>
-          </div>
-          <span class="text-[10px] font-semibold text-gray-900">Exercise</span>
-        </a>
-      </nav>
+        </main>
+      </div>
     </div>
+
+    <!-- Bottom Nav (mobile only) -->
+    <nav
+      class="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
+      <a
+        href="1 Home Hub.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-house text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Home</span>
+      </a>
+      <a
+        href="2 Learn.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-book text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Learn</span>
+      </a>
+      <a
+        href="3 Revise.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-rotate-right text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Revise</span>
+      </a>
+      <a
+        href="4 Exercise.html"
+        class="flex flex-col items-center gap-1 text-black">
+        <div
+          class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-900">
+          <i class="fa-solid fa-dumbbell text-lg"></i>
+        </div>
+        <span class="text-[10px] font-semibold text-gray-900">Exercise</span>
+      </a>
+    </nav>
 
     <script>
       const modeConfig = {
         mcq: {
           title: "MCQ Practice",
           iconClass: "fa-list-ul",
-          iconColor: "text-brand-blue",
           time: "3-5 mins",
           items: "20 Questions",
           startLabel: "Start MCQ",
@@ -259,7 +309,6 @@
         mixed: {
           title: "Mixed Practice",
           iconClass: "fa-bolt",
-          iconColor: "text-brand-blue",
           time: "4-6 mins",
           items: "20 Questions",
           startLabel: "Start Test",
@@ -268,42 +317,34 @@
         typing: {
           title: "Typing Practice",
           iconClass: "fa-keyboard",
-          iconColor: "text-brand-blue",
           time: "5-8 mins",
           items: "15 Questions",
           startLabel: "Start Typing",
           href: "4.1 Quiz.html",
         },
       };
-
       const modeButtons = document.querySelectorAll(".mode-pill");
       const practiceTitle = document.getElementById("practice-title");
       const practiceMeta = document.getElementById("practice-meta");
       const startButton = document.getElementById("start-button");
       const startLabel = document.getElementById("start-label");
       const cardIcon = document.querySelector("#primary-action-card .fa-solid");
-
       let activeMode = "mixed";
 
       function renderMode(mode) {
         const config = modeConfig[mode];
         if (!config) return;
-
         activeMode = mode;
         practiceTitle.textContent = config.title;
         startLabel.textContent = config.startLabel;
-
         practiceMeta.innerHTML = `
           <span class="bg-brand-purple/20 text-brand-text px-3 py-1 rounded-full text-xs font-bold border border-brand-purple/30 flex items-center gap-1.5">
             <i class="fa-regular fa-clock text-[10px]"></i> ${config.time}
           </span>
           <span class="bg-brand-green/20 text-brand-text px-3 py-1 rounded-full text-xs font-bold border border-brand-green/30 flex items-center gap-1.5">
             <i class="fa-solid fa-layer-group text-[10px]"></i> ${config.items}
-          </span>
-        `;
-
-        cardIcon.className = `fa-solid ${config.iconClass} text-3xl ${config.iconColor}`;
-
+          </span>`;
+        cardIcon.className = `fa-solid ${config.iconClass} text-3xl text-brand-blue`;
         modeButtons.forEach((button) => {
           const isActive = button.dataset.mode === mode;
           button.setAttribute("aria-selected", String(isActive));
@@ -314,17 +355,13 @@
           button.classList.toggle("text-gray-500", !isActive);
         });
       }
-
       modeButtons.forEach((button) => {
         button.addEventListener("click", () => renderMode(button.dataset.mode));
       });
-
       startButton.addEventListener("click", () => {
         const config = modeConfig[activeMode];
-        if (!config) return;
-        window.location.href = config.href;
+        if (config) window.location.href = config.href;
       });
-
       renderMode(activeMode);
     </script>
   </body>

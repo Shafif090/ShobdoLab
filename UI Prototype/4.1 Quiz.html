@@ -2,9 +2,7 @@
 <html lang="en">
   <head>
     <script>
-      window.FontAwesomeConfig = {
-        autoReplaceSvg: "nest",
-      };
+      window.FontAwesomeConfig = { autoReplaceSvg: "nest" };
     </script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
@@ -12,7 +10,7 @@
       referrerpolicy="no-referrer"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Language Learning - Quiz - MCQ Mode</title>
+    <title>ShobdoLab - Quiz</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,9 +27,7 @@
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
+            fontFamily: { sans: ["Inter", "sans-serif"] },
             colors: {
               brand: {
                 bg: "#FAFAFA",
@@ -45,8 +41,8 @@
               },
             },
             boxShadow: {
-              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
-              card: "0 2px 10px rgba(0, 0, 0, 0.02)",
+              soft: "0 4px 20px -2px rgba(0,0,0,0.05)",
+              card: "0 2px 10px rgba(0,0,0,0.02)",
             },
           },
         },
@@ -60,44 +56,37 @@
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
-
-      /* Grid background pattern */
       .bg-grid {
         background-size: 40px 40px;
         background-image:
           linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       }
-
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
     </style>
   </head>
   <body
-    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
-    <!-- Mobile App Container -->
-    <div
-      id="app-container"
-      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid pb-20">
-      <!-- Header Section -->
+    class="bg-brand-bg text-brand-text min-h-[100dvh] overflow-x-hidden bg-grid">
+    <!-- Full-screen flex layout -->
+    <div class="min-h-[100dvh] flex flex-col bg-white">
+      <!-- Header -->
       <header
-        id="header"
-        class="px-6 pt-12 pb-4 flex items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
-        <div class="flex items-center gap-3 w-full justify-between">
+        class="px-4 md:px-0 pt-12 md:pt-6 pb-4 bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+        <div
+          class="w-full md:max-w-2xl md:mx-auto flex items-center gap-3 px-0 md:px-6">
           <button
             aria-label="Close"
-            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors shrink-0">
             <i class="fa-solid fa-xmark text-sm" aria-hidden="true"></i>
           </button>
           <div
-            class="flex-1 px-4"
+            class="flex-1"
             role="progressbar"
             aria-valuenow="30"
             aria-valuemin="0"
@@ -108,124 +97,117 @@
             </div>
           </div>
           <span
-            class="text-sm font-bold text-gray-400"
+            class="text-sm font-bold text-gray-400 shrink-0"
             aria-label="Question 3 of 10"
             >3/10</span
           >
         </div>
       </header>
 
-      <!-- Main Content Area -->
-      <main
-        id="main-content"
-        class="flex-1 overflow-y-auto no-scrollbar pb-24 px-6 pt-8 flex flex-col gap-8">
-        <!-- Question Prompt -->
-        <div id="question-prompt" class="flex flex-col gap-4 text-center mt-4">
-          <span
-            class="text-xs font-bold text-brand-blue uppercase tracking-wider"
-            >What is the meaning of following word?</span
-          >
-          <h2 class="text-3xl font-extrabold text-gray-900">Perfidious</h2>
-
-          <div class="flex items-center justify-center gap-2 mt-2">
-            <button
-              aria-label="Play audio"
-              class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors focus:ring-2 focus:ring-brand-blue focus:outline-none">
-              <i class="fa-solid fa-volume-high text-xs" aria-hidden="true"></i>
-            </button>
-            <button
-              aria-label="Play audio slowly"
-              class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors focus:ring-2 focus:ring-brand-blue focus:outline-none">
-              <i class="fa-solid fa-turtle text-xs" aria-hidden="true"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- MCQ Options Container -->
-        <div
-          id="mcq-options-container"
-          class="flex flex-col gap-3 mt-4"
-          role="radiogroup"
-          aria-label="Multiple choice options">
-          <!-- Option 1 (Default State) -->
-          <button
-            role="radio"
-            aria-checked="false"
-            class="w-full text-left p-4 rounded-2xl border-2 border-brand-border bg-white shadow-sm hover:border-gray-300 focus:border-brand-blue focus:outline-none transition-all flex items-center justify-between group">
+      <!-- Main -->
+      <main class="flex-1 overflow-y-auto no-scrollbar pb-32 px-6 pt-8">
+        <div class="w-full md:max-w-xl md:mx-auto flex flex-col gap-8">
+          <!-- Question Prompt -->
+          <div class="flex flex-col gap-4 text-center mt-4">
             <span
-              class="text-base font-semibold text-gray-700 group-hover:text-gray-900"
-              >অনধিগম্য</span
+              class="text-xs font-bold text-brand-blue uppercase tracking-wider"
+              >What is the meaning of following word?</span
             >
-            <div
-              class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-gray-300 transition-colors"></div>
-          </button>
-
-          <!-- Option 2 (Default State) -->
-          <button
-            role="radio"
-            aria-checked="false"
-            class="w-full text-left p-4 rounded-2xl border-2 border-brand-border bg-white shadow-sm hover:border-gray-300 focus:border-brand-blue focus:outline-none transition-all flex items-center justify-between group">
-            <span
-              class="text-base font-semibold text-gray-700 group-hover:text-gray-900"
-              >প্রংশসনীয়</span
-            >
-            <div
-              class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-gray-300 transition-colors"></div>
-          </button>
-
-          <!-- Option 3 (Selected / Correct State - Simulating post-interaction) -->
-          <button
-            role="radio"
-            aria-checked="true"
-            class="w-full text-left p-4 rounded-2xl border-2 border-brand-green bg-brand-green/10 shadow-sm transition-all flex items-center justify-between">
-            <span class="text-base font-bold text-gray-900">বিশ্বাসঘাতক</span>
-            <div
-              class="w-6 h-6 rounded-full bg-brand-green text-white flex items-center justify-center shadow-sm">
-              <i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+            <h2 class="text-3xl font-extrabold text-gray-900">Perfidious</h2>
+            <div class="flex items-center justify-center gap-2 mt-2">
+              <button
+                aria-label="Play audio"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors focus:ring-2 focus:ring-brand-blue focus:outline-none">
+                <i
+                  class="fa-solid fa-volume-high text-xs"
+                  aria-hidden="true"></i>
+              </button>
+              <button
+                aria-label="Play audio slowly"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition-colors focus:ring-2 focus:ring-brand-blue focus:outline-none">
+                <i class="fa-solid fa-turtle text-xs" aria-hidden="true"></i>
+              </button>
             </div>
-          </button>
-
-          <!-- Option 4 (Default State) -->
-          <button
-            role="radio"
-            aria-checked="false"
-            class="w-full text-left p-4 rounded-2xl border-2 border-brand-border bg-white shadow-sm hover:border-gray-300 focus:border-brand-blue focus:outline-none transition-all flex items-center justify-between group">
-            <span
-              class="text-base font-semibold text-gray-700 group-hover:text-gray-900"
-              >জনসমাবেশ</span
-            >
-            <div
-              class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-gray-300 transition-colors"></div>
-          </button>
-        </div>
-
-        <!-- Feedback / Correction Panel (Visible after selection) -->
-        <div
-          id="feedback-correction-panel"
-          class="bg-brand-green/10 border border-brand-green/20 rounded-2xl p-4 flex gap-3 items-start animate-fade-in mt-2">
-          <div
-            class="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center shrink-0 mt-0.5">
-            <i class="fa-solid fa-thumbs-up text-sm"></i>
           </div>
-          <div class="flex flex-col">
-            <h4 class="text-sm font-bold text-gray-900">Excellent!</h4>
-            <p class="text-xs text-gray-600 mt-1">
-              "Perfidious" means বিশ্বাসঘাতক!
-            </p>
+
+          <!-- MCQ Options -->
+          <div
+            class="flex flex-col gap-3 mt-4"
+            role="radiogroup"
+            aria-label="Multiple choice options">
+            <button
+              role="radio"
+              aria-checked="false"
+              class="w-full text-left p-4 rounded-2xl border-2 border-brand-border bg-white shadow-sm hover:border-gray-300 focus:border-brand-blue focus:outline-none transition-all flex items-center justify-between group">
+              <span
+                class="text-base font-semibold text-gray-700 group-hover:text-gray-900"
+                >অনধিগম্য</span
+              >
+              <div
+                class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-gray-300 transition-colors"></div>
+            </button>
+            <button
+              role="radio"
+              aria-checked="false"
+              class="w-full text-left p-4 rounded-2xl border-2 border-brand-border bg-white shadow-sm hover:border-gray-300 focus:border-brand-blue focus:outline-none transition-all flex items-center justify-between group">
+              <span
+                class="text-base font-semibold text-gray-700 group-hover:text-gray-900"
+                >প্রংশসনীয়</span
+              >
+              <div
+                class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-gray-300 transition-colors"></div>
+            </button>
+            <button
+              role="radio"
+              aria-checked="true"
+              class="w-full text-left p-4 rounded-2xl border-2 border-brand-green bg-brand-green/10 shadow-sm transition-all flex items-center justify-between">
+              <span class="text-base font-bold text-gray-900">বিশ্বাসঘাতক</span>
+              <div
+                class="w-6 h-6 rounded-full bg-brand-green text-white flex items-center justify-center shadow-sm">
+                <i class="fa-solid fa-check text-xs" aria-hidden="true"></i>
+              </div>
+            </button>
+            <button
+              role="radio"
+              aria-checked="false"
+              class="w-full text-left p-4 rounded-2xl border-2 border-brand-border bg-white shadow-sm hover:border-gray-300 focus:border-brand-blue focus:outline-none transition-all flex items-center justify-between group">
+              <span
+                class="text-base font-semibold text-gray-700 group-hover:text-gray-900"
+                >জনসমাবেশ</span
+              >
+              <div
+                class="w-6 h-6 rounded-full border-2 border-gray-200 flex items-center justify-center group-hover:border-gray-300 transition-colors"></div>
+            </button>
+          </div>
+
+          <!-- Feedback -->
+          <div
+            class="bg-brand-green/10 border border-brand-green/20 rounded-2xl p-4 flex gap-3 items-start mt-2">
+            <div
+              class="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-thumbs-up text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <h4 class="text-sm font-bold text-gray-900">Excellent!</h4>
+              <p class="text-xs text-gray-600 mt-1">
+                "Perfidious" means বিশ্বাসঘাতক!
+              </p>
+            </div>
           </div>
         </div>
       </main>
 
-      <!-- Primary Action Footer -->
+      <!-- Action Footer -->
       <div
-        id="primary-action-footer"
-        class="absolute bottom-20 left-0 w-full px-6 pt-4 bg-white/90 backdrop-blur-sm border-t border-gray-100 z-40">
-        <a href="4.3 Result.html">
-          <button
-            class="w-full bg-brand-blue text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(142,155,250,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
-            Continue <i class="fa-solid fa-arrow-right text-sm ml-1"></i>
-          </button>
-        </a>
+        class="border-t border-gray-100 bg-white/90 backdrop-blur-sm px-6 py-4">
+        <div class="w-full md:max-w-xl md:mx-auto">
+          <a href="4.3 Result.html">
+            <button
+              class="w-full bg-brand-blue text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(142,155,250,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
+              Continue <i class="fa-solid fa-arrow-right text-sm ml-1"></i>
+            </button>
+          </a>
+        </div>
       </div>
     </div>
   </body>

@@ -2,22 +2,18 @@
 <html lang="en">
   <head>
     <script>
-      window.FontAwesomeConfig = {
-        autoReplaceSvg: "nest",
-      };
+      window.FontAwesomeConfig = { autoReplaceSvg: "nest" };
     </script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
       crossorigin="anonymous"
       referrerpolicy="no-referrer"></script>
-
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Language Learning - Home Hub</title>
-
+    <title>ShobdoLab - Home</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet" />
@@ -27,14 +23,11 @@
       integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
       crossorigin="anonymous"
       referrerpolicy="no-referrer" />
-
     <script>
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
+            fontFamily: { sans: ["Inter", "sans-serif"] },
             colors: {
               brand: {
                 bg: "#FAFAFA",
@@ -48,14 +41,13 @@
               },
             },
             boxShadow: {
-              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
-              card: "0 2px 10px rgba(0, 0, 0, 0.02)",
+              soft: "0 4px 20px -2px rgba(0,0,0,0.05)",
+              card: "0 2px 10px rgba(0,0,0,0.02)",
             },
           },
         },
       };
     </script>
-
     <style>
       body {
         margin: 0;
@@ -64,27 +56,19 @@
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
-
-      /* Grid background pattern */
       .bg-grid {
         background-size: 40px 40px;
         background-image:
           linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       }
-
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
-
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-        -ms-overflow-style: none; /* IE and Edge */
-        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
-
-      /* Scalloped edge effect for cards */
       .scalloped-card {
         mask-image: radial-gradient(
           circle at 10px 10px,
@@ -94,230 +78,288 @@
         mask-size: 20px 20px;
         mask-position: -10px -10px;
       }
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        border-radius: 16px;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.15s;
+      }
+      .sidebar-link:hover {
+        background: #f9fafb;
+        color: #111827;
+      }
+      .sidebar-link.active {
+        background: rgba(244, 124, 124, 0.1);
+        color: #f47c7c;
+      }
+      .sidebar-link .icon {
+        width: 20px;
+        text-align: center;
+      }
     </style>
   </head>
-
-  <body
-    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
-    <!-- Mobile App Container -->
-    <div
-      id="app-container"
-      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid">
-      <!-- Header Section -->
-      <header
-        id="header"
-        class="px-6 pt-12 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
-        <h1 class="text-2xl font-bold tracking-tight text-brand-text">
-          ShobdoLab
-        </h1>
-
-        <div class="flex items-center gap-3 h-[50px]" id="ilckb">
-          <button
-            class="rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors w-[50px] h-[50px]"
-            id="its8l">
-            <i class="fa-solid fa-trophy text-sm"></i>
-          </button>
-
-          <button
-            class="rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors relative w-[50px] h-[50px]"
-            id="ifpfq">
-            <i class="fa-regular fa-bell text-sm" id="iimjg"></i>
-            <span
-              class="absolute top-2 right-2.5 h-2 bg-red-500 rounded-full border-2 border-white w-px"
-              id="i7bti"></span>
-          </button>
-        </div>
-      </header>
-
-      <!-- Main Content Area -->
-      <main
-        id="main-content"
-        class="flex-1 overflow-y-auto no-scrollbar pb-24 px-6 pt-6 flex flex-col gap-8">
-        <!-- Daily Progress Summary -->
-        <section id="daily-progress" class="flex flex-col gap-3 items">
-          <h2
-            class="font-semibold text-gray-500 uppercase tracking-wider text-[15px] text-left"
-            id="inqsb">
-            Today's Progress
-          </h2>
-
-          <div class="flex gap-4 w-full max-w-[340px] justify-center">
-            <!-- Streak Card -->
+  <body class="bg-brand-bg text-brand-text min-h-[100dvh] overflow-x-hidden">
+    <!-- App Layout -->
+    <div id="app-container" class="flex min-h-[100dvh] bg-white bg-grid">
+      <!-- ── Sidebar (desktop only) ── -->
+      <aside
+        class="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-brand-border sticky top-0 h-screen shrink-0 overflow-y-auto">
+        <div class="p-6 flex flex-col gap-6 h-full">
+          <!-- Brand -->
+          <div class="flex items-center gap-3 pt-2">
             <div
-              class="flex-1 bg-brand-purple/20 border border-brand-purple rounded-2xl p-4 flex items-center gap-4">
-              <div
-                class="w-11 h-11 aspect-square rounded-full border-2 border-white/60 bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
-                <i class="fa-solid fa-fire"></i>
-              </div>
-              <div>
-                <p class="text-2xl font-bold">12</p>
-                <p class="text-xs text-gray-600 font-medium">Day Streak</p>
-              </div>
+              class="w-11 h-11 rounded-[14px] bg-brand-orange flex items-center justify-center shadow-[0_3px_0_0_#000] border-2 border-black shrink-0">
+              <i class="fa-solid fa-book-open text-white text-sm"></i>
             </div>
-
-            <!-- Words Learned Card -->
-            <div
-              class="flex-1 bg-brand-green/20 border border-brand-green rounded-2xl p-4 flex items-center gap-4">
-              <div
-                class="w-11 h-11 aspect-square rounded-full border-2 border-white/60 bg-brand-green flex items-center justify-center text-green-700 shrink-0">
-                <i class="fa-solid fa-book-open text-[15px] leading-none"></i>
-              </div>
-              <div>
-                <p class="text-2xl font-bold">45</p>
-                <p class="text-xs text-gray-600 font-medium">Words Learned</p>
-              </div>
-            </div>
+            <span class="text-xl font-extrabold tracking-tight text-brand-text"
+              >ShobdoLab</span
+            >
           </div>
-        </section>
-
-        <!-- Primary Action Hub (The 3 big cards) -->
-        <section id="primary-actions" class="flex flex-col gap-6 relative">
-          <!-- Learn Card -->
-          <a href="2 Learn.html">
-            <button class="w-full text-left group relative">
-              <div
-                class="absolute inset-0 bg-brand-orange rounded-[24px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
-              <div
-                class="relative bg-brand-orange border-2 border-black rounded-[24px] p-6 flex flex-col gap-2 transform group-hover:-translate-y-1 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
-                <div class="flex justify-between items-start">
-                  <h3 class="text-2xl font-bold text-white">Learn</h3>
-                  <div
-                    class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-                <p class="text-white/90 text-sm font-medium mt-1">
-                  Discover new words
-                </p>
-              </div>
-            </button>
-          </a>
-
-          <!-- Decorative Arrow -->
-          <div class="flex justify-end pr-12 -my-2 z-10 relative">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 40 40"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-black transform rotate-[15deg]">
-              <path
-                d="M10 10 Q 30 10 30 30 M 24 25 L 30 30 L 36 25"
-                stroke="currentColor"
-                stroke-width="2"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"></path>
-            </svg>
-          </div>
-
-          <!-- Revise Card -->
-          <a href="3 Revise.html">
-            <button class="w-full text-left group relative pl-8">
-              <div
-                class="absolute inset-0 left-8 bg-brand-blue rounded-[24px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
-              <div
-                class="relative bg-brand-blue border-2 border-black rounded-[24px] p-6 flex flex-col gap-2 transform group-hover:-translate-y-1 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
-                <div class="flex justify-between items-start">
-                  <h3 class="text-2xl font-bold text-white">Revise</h3>
-                  <div
-                    class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-                <p class="text-white/90 text-sm font-medium mt-1">
-                  Track your progress
-                </p>
-              </div>
-            </button>
-          </a>
-
-          <!-- Decorative Arrow -->
-          <div class="flex justify-start pl-12 -my-2 z-10 relative">
-            <svg
-              width="40"
-              height="40"
-              viewBox="0 0 40 40"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              class="text-black transform scale-x-[-1] rotate-[0deg]"
-              id="ir6uj">
-              <path
-                d="M10 10 Q 30 10 30 30 M 24 25 L 30 30 L 36 25"
-                stroke="currentColor"
-                stroke-width="2"
-                fill="none"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                id="i10lr"></path>
-            </svg>
-          </div>
-
-          <!-- Exercise Card -->
-          <a href="4 Exercise.html">
-            <button class="w-full text-left group relative pr-8">
-              <div
-                class="absolute inset-0 right-8 bg-brand-green rounded-[24px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
-              <div
-                class="relative bg-brand-green border-2 border-black rounded-[24px] p-6 flex flex-col gap-2 transform group-hover:-translate-y-1 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
-                <div class="flex justify-between items-start">
-                  <h3 class="text-2xl font-bold text-black">Exercise</h3>
-                  <div
-                    class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-black">
-                    <i class="fa-solid fa-arrow-right"></i>
-                  </div>
-                </div>
-                <p class="text-black/90 text-sm font-medium mt-1">
-                  Unlock full potential
-                </p>
-              </div>
-            </button>
-          </a>
-        </section>
-      </main>
-
-      <!-- Bottom Navigation Bar -->
-      <nav
-        id="bottom-nav"
-        class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
-        <a
-          href="1 Home Hub.html"
-          class="flex flex-col items-center gap-1 text-black">
+          <!-- Nav -->
+          <nav class="flex flex-col gap-1 flex-1 mt-2">
+            <a href="1 Home Hub.html" class="sidebar-link active">
+              <i class="fa-solid fa-house icon"></i><span>Home</span>
+            </a>
+            <a href="2 Learn.html" class="sidebar-link">
+              <i class="fa-solid fa-book icon"></i><span>Learn</span>
+            </a>
+            <a href="3 Revise.html" class="sidebar-link">
+              <i class="fa-solid fa-rotate-right icon"></i><span>Revise</span>
+            </a>
+            <a href="4 Exercise.html" class="sidebar-link">
+              <i class="fa-solid fa-dumbbell icon"></i><span>Exercise</span>
+            </a>
+          </nav>
+          <!-- Streak widget -->
           <div
-            class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-            <i class="fa-solid fa-house text-lg"></i>
+            class="bg-brand-purple/20 border border-brand-purple/30 rounded-2xl p-4 flex items-center gap-3">
+            <div
+              class="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
+              <i class="fa-solid fa-fire text-sm"></i>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">12-Day Streak!</p>
+              <p class="text-xs text-gray-500">Keep it up 🔥</p>
+            </div>
           </div>
-          <span class="text-[10px] font-semibold">Home</span>
-        </a>
+        </div>
+      </aside>
 
-        <a
-          href="2 Learn.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-book text-lg"></i>
+      <!-- ── Content Area ── -->
+      <div
+        class="flex-1 flex flex-col md:overflow-y-auto min-h-[100dvh] md:min-h-0">
+        <!-- Header -->
+        <header
+          class="px-6 md:px-10 pt-12 md:pt-6 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+          <h1
+            class="text-2xl font-bold tracking-tight text-brand-text md:hidden">
+            ShobdoLab
+          </h1>
+          <h1
+            class="text-2xl font-bold tracking-tight text-brand-text hidden md:block">
+            Home
+          </h1>
+          <div class="flex items-center gap-3 h-[50px]">
+            <button
+              class="rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors w-[50px] h-[50px]">
+              <i class="fa-solid fa-trophy text-sm"></i>
+            </button>
+            <button
+              class="rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors relative w-[50px] h-[50px]">
+              <i class="fa-regular fa-bell text-sm"></i>
+              <span
+                class="absolute top-2 right-2.5 h-2 bg-red-500 rounded-full border-2 border-white w-px"></span>
+            </button>
           </div>
-          <span class="text-[10px] font-medium">Learn</span>
-        </a>
+        </header>
 
-        <a
-          href="3 Revise.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-rotate-right text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Revise</span>
-        </a>
+        <!-- Main -->
+        <main
+          class="flex-1 no-scrollbar pb-24 md:pb-12 px-6 md:px-10 pt-6 flex flex-col gap-8">
+          <div class="md:max-w-2xl md:mx-auto w-full flex flex-col gap-8">
+            <!-- Daily Progress -->
+            <section class="flex flex-col gap-3">
+              <h2
+                class="font-semibold text-gray-500 uppercase tracking-wider text-[15px]">
+                Today's Progress
+              </h2>
+              <div class="flex gap-4 w-full">
+                <div
+                  class="flex-1 bg-brand-purple/20 border border-brand-purple rounded-2xl p-4 flex items-center gap-4">
+                  <div
+                    class="w-11 h-11 aspect-square rounded-full border-2 border-white/60 bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
+                    <i class="fa-solid fa-fire"></i>
+                  </div>
+                  <div>
+                    <p class="text-2xl font-bold">12</p>
+                    <p class="text-xs text-gray-600 font-medium">Day Streak</p>
+                  </div>
+                </div>
+                <div
+                  class="flex-1 bg-brand-green/20 border border-brand-green rounded-2xl p-4 flex items-center gap-4">
+                  <div
+                    class="w-11 h-11 aspect-square rounded-full border-2 border-white/60 bg-brand-green flex items-center justify-center text-green-700 shrink-0">
+                    <i
+                      class="fa-solid fa-book-open text-[15px] leading-none"></i>
+                  </div>
+                  <div>
+                    <p class="text-2xl font-bold">45</p>
+                    <p class="text-xs text-gray-600 font-medium">
+                      Words Learned
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
 
-        <a
-          href="4 Exercise.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-dumbbell text-lg"></i>
+            <!-- Primary Actions -->
+            <section class="flex flex-col gap-6 relative">
+              <!-- Learn -->
+              <a href="2 Learn.html">
+                <button class="w-full text-left group relative">
+                  <div
+                    class="absolute inset-0 bg-brand-orange rounded-[24px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
+                  <div
+                    class="relative bg-brand-orange border-2 border-black rounded-[24px] p-6 flex flex-col gap-2 transform group-hover:-translate-y-1 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
+                    <div class="flex justify-between items-start">
+                      <h3 class="text-2xl font-bold text-white">Learn</h3>
+                      <div
+                        class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-arrow-right"></i>
+                      </div>
+                    </div>
+                    <p class="text-white/90 text-sm font-medium mt-1">
+                      Discover new words
+                    </p>
+                  </div>
+                </button>
+              </a>
+
+              <div class="flex justify-end pr-12 -my-2 z-10 relative">
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="text-black transform rotate-[15deg]">
+                  <path
+                    d="M10 10 Q 30 10 30 30 M 24 25 L 30 30 L 36 25"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"></path>
+                </svg>
+              </div>
+
+              <!-- Revise -->
+              <a href="3 Revise.html">
+                <button class="w-full text-left group relative pl-8">
+                  <div
+                    class="absolute inset-0 left-8 bg-brand-blue rounded-[24px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
+                  <div
+                    class="relative bg-brand-blue border-2 border-black rounded-[24px] p-6 flex flex-col gap-2 transform group-hover:-translate-y-1 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
+                    <div class="flex justify-between items-start">
+                      <h3 class="text-2xl font-bold text-white">Revise</h3>
+                      <div
+                        class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white">
+                        <i class="fa-solid fa-arrow-right"></i>
+                      </div>
+                    </div>
+                    <p class="text-white/90 text-sm font-medium mt-1">
+                      Track your progress
+                    </p>
+                  </div>
+                </button>
+              </a>
+
+              <div class="flex justify-start pl-12 -my-2 z-10 relative">
+                <svg
+                  width="40"
+                  height="40"
+                  viewBox="0 0 40 40"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="text-black transform scale-x-[-1] rotate-[0deg]">
+                  <path
+                    d="M10 10 Q 30 10 30 30 M 24 25 L 30 30 L 36 25"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    fill="none"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"></path>
+                </svg>
+              </div>
+
+              <!-- Exercise -->
+              <a href="4 Exercise.html">
+                <button class="w-full text-left group relative pr-8">
+                  <div
+                    class="absolute inset-0 right-8 bg-brand-green rounded-[24px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
+                  <div
+                    class="relative bg-brand-green border-2 border-black rounded-[24px] p-6 flex flex-col gap-2 transform group-hover:-translate-y-1 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
+                    <div class="flex justify-between items-start">
+                      <h3 class="text-2xl font-bold text-black">Exercise</h3>
+                      <div
+                        class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-black">
+                        <i class="fa-solid fa-arrow-right"></i>
+                      </div>
+                    </div>
+                    <p class="text-black/90 text-sm font-medium mt-1">
+                      Unlock full potential
+                    </p>
+                  </div>
+                </button>
+              </a>
+            </section>
           </div>
-          <span class="text-[10px] font-medium">Exercise</span>
-        </a>
-      </nav>
+        </main>
+      </div>
     </div>
+
+    <!-- Bottom Nav (mobile only) -->
+    <nav
+      class="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
+      <a
+        href="1 Home Hub.html"
+        class="flex flex-col items-center gap-1 text-black">
+        <div
+          class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+          <i class="fa-solid fa-house text-lg"></i>
+        </div>
+        <span class="text-[10px] font-semibold">Home</span>
+      </a>
+      <a
+        href="2 Learn.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-book text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Learn</span>
+      </a>
+      <a
+        href="3 Revise.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-rotate-right text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Revise</span>
+      </a>
+      <a
+        href="4 Exercise.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-dumbbell text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Exercise</span>
+      </a>
+    </nav>
   </body>
 </html>

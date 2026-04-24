@@ -22,7 +22,6 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
       crossorigin="anonymous"
       referrerpolicy="no-referrer" />
-
     <script>
       tailwind.config = {
         theme: {
@@ -48,7 +47,6 @@
         },
       };
     </script>
-
     <style>
       body {
         margin: 0;
@@ -70,8 +68,6 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-
-      /* input focus ring matches brand-orange */
       .brand-input:focus {
         outline: none;
         border-color: #f47c7c;
@@ -82,8 +78,6 @@
           border-color 0.2s,
           box-shadow 0.2s;
       }
-
-      /* Decorative floating shapes */
       .shape-circle {
         position: absolute;
         border-radius: 50%;
@@ -101,190 +95,279 @@
         opacity: 0.28;
         pointer-events: none;
       }
-
-      /* password toggle */
       #toggle-pw {
         cursor: pointer;
       }
     </style>
   </head>
-
-  <body
-    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
-    <div
-      id="app-container"
-      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid">
-      <!-- Decorative shapes -->
-      <div class="shape-circle w-5 h-5" style="top: 88px; left: 24px"></div>
-      <div class="shape-tri" style="top: 160px; right: 28px"></div>
+  <body class="bg-brand-bg text-brand-text min-h-[100dvh] overflow-x-hidden">
+    <div class="min-h-[100dvh] flex flex-col md:flex-row">
+      <!-- Left Brand Panel (desktop only) -->
       <div
-        class="absolute opacity-20 text-brand-blue text-xl pointer-events-none"
-        style="top: 240px; left: 20px">
-        <i class="fa-solid fa-play rotate-12"></i>
-      </div>
-      <div
-        class="shape-circle w-3 h-3"
-        style="bottom: 200px; right: 20px; border-color: #8e9bfa"></div>
+        class="hidden md:flex flex-col justify-between w-2/5 lg:w-1/2 bg-brand-orange p-12 relative overflow-hidden min-h-screen">
+        <!-- Decorative bg shapes -->
+        <div
+          class="absolute top-16 right-16 w-48 h-48 rounded-full bg-white/10 blur-3xl"></div>
+        <div
+          class="absolute bottom-24 left-8 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 rounded-full border-2 border-white/20"></div>
+        <div
+          class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-56 h-56 rounded-full border border-white/10"></div>
 
-      <!-- Header -->
-      <header
-        class="px-6 pt-12 pb-4 flex items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
-        <a
-          href="1_Home_Hub.html"
-          class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
-          <i class="fa-solid fa-arrow-left text-sm"></i>
-        </a>
-        <span class="ml-3 text-xl font-bold tracking-tight text-brand-text"
-          >Sign In</span
-        >
-      </header>
-
-      <!-- Main -->
-      <main
-        class="flex-1 overflow-y-auto no-scrollbar px-6 pt-8 pb-24 flex flex-col gap-8">
-        <!-- Brand mark -->
-        <div class="flex flex-col items-center gap-2 mt-2">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 z-10">
           <div
-            class="w-16 h-16 rounded-[20px] bg-brand-orange flex items-center justify-center shadow-[0_4px_0_0_#000] border-2 border-black">
-            <i class="fa-solid fa-book-open text-2xl text-white"></i>
+            class="w-12 h-12 rounded-[16px] bg-white flex items-center justify-center shadow-[0_4px_0_0_rgba(0,0,0,0.3)] border-2 border-black/10">
+            <i class="fa-solid fa-book-open text-brand-orange text-xl"></i>
           </div>
-          <h1
-            class="text-2xl font-extrabold text-brand-text tracking-tight mt-2">
-            ShobdoLab
-          </h1>
-          <p class="text-sm text-gray-500 font-medium">
-            Welcome back! Continue your streak.
-          </p>
-        </div>
-
-        <!-- Social login -->
-        <div class="flex flex-col gap-3">
-          <button
-            class="w-full flex items-center justify-center gap-3 border-2 border-brand-border rounded-2xl py-3.5 bg-white hover:bg-gray-50 transition-colors font-semibold text-sm text-gray-700 shadow-sm">
-            <img
-              src="https://www.svgrepo.com/show/475656/google-color.svg"
-              alt="Google"
-              class="w-5 h-5" />
-            Continue with Google
-          </button>
-        </div>
-
-        <!-- Divider -->
-        <div class="flex items-center gap-3">
-          <div class="flex-1 h-px bg-brand-border"></div>
-          <span
-            class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
-            >or</span
+          <span class="text-2xl font-extrabold text-white tracking-tight"
+            >ShobdoLab</span
           >
-          <div class="flex-1 h-px bg-brand-border"></div>
         </div>
 
-        <!-- Form fields -->
-        <div class="flex flex-col gap-4">
-          <!-- Email -->
-          <div class="flex flex-col gap-1.5">
-            <label
-              for="email"
-              class="text-xs font-bold text-gray-600 uppercase tracking-wider"
-              >Email</label
-            >
-            <div class="relative">
-              <span
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <i class="fa-regular fa-envelope text-sm"></i>
-              </span>
-              <input
-                id="email"
-                type="email"
-                placeholder="your@email.com"
-                class="brand-input w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
-                autocomplete="email" />
-            </div>
+        <!-- Center content -->
+        <div class="flex flex-col gap-8 z-10">
+          <div>
+            <h2 class="text-4xl font-black text-white leading-tight">
+              Welcome<br />back!
+            </h2>
+            <p class="text-white/80 text-lg mt-3 font-medium">
+              Continue your language<br />learning journey.
+            </p>
           </div>
 
-          <!-- Password -->
-          <div class="flex flex-col gap-1.5">
-            <div class="flex justify-between items-center">
-              <label
-                for="password"
-                class="text-xs font-bold text-gray-600 uppercase tracking-wider"
-                >Password</label
-              >
-              <a
-                href="#"
-                class="text-xs font-semibold text-brand-blue hover:underline"
-                >Forgot password?</a
-              >
+          <div class="flex flex-col gap-4">
+            <div
+              class="flex items-center gap-4 bg-white/15 rounded-2xl p-4 backdrop-blur-sm">
+              <div
+                class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-fire text-white"></i>
+              </div>
+              <div>
+                <p class="text-white font-bold text-sm">
+                  Keep your streak alive
+                </p>
+                <p class="text-white/70 text-xs mt-0.5">
+                  Sign in daily to maintain your progress
+                </p>
+              </div>
             </div>
-            <div class="relative">
-              <span
-                class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-                <i class="fa-solid fa-lock text-sm"></i>
-              </span>
-              <input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                class="brand-input w-full pl-10 pr-12 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
-                autocomplete="current-password" />
+            <div
+              class="flex items-center gap-4 bg-white/15 rounded-2xl p-4 backdrop-blur-sm">
+              <div
+                class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-brain text-white"></i>
+              </div>
+              <div>
+                <p class="text-white font-bold text-sm">Spaced repetition</p>
+                <p class="text-white/70 text-xs mt-0.5">
+                  Smart review scheduling for retention
+                </p>
+              </div>
+            </div>
+            <div
+              class="flex items-center gap-4 bg-white/15 rounded-2xl p-4 backdrop-blur-sm">
+              <div
+                class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                <i class="fa-solid fa-trophy text-white"></i>
+              </div>
+              <div>
+                <p class="text-white font-bold text-sm">Track achievements</p>
+                <p class="text-white/70 text-xs mt-0.5">
+                  Earn badges as you learn and grow
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bottom note -->
+        <p class="text-white/50 text-xs z-10">
+          © 2025 ShobdoLab · All rights reserved
+        </p>
+      </div>
+
+      <!-- Right Form Panel -->
+      <div class="flex-1 flex flex-col bg-white bg-grid relative">
+        <!-- Decorative shapes (mobile) -->
+        <div class="shape-circle w-5 h-5" style="top: 88px; left: 24px"></div>
+        <div class="shape-tri" style="top: 160px; right: 28px"></div>
+        <div
+          class="absolute opacity-20 text-brand-blue text-xl pointer-events-none"
+          style="top: 240px; left: 20px">
+          <i class="fa-solid fa-play rotate-12"></i>
+        </div>
+        <div
+          class="shape-circle w-3 h-3"
+          style="bottom: 200px; right: 20px; border-color: #8e9bfa"></div>
+
+        <!-- Header -->
+        <header
+          class="px-6 pt-12 md:pt-8 pb-4 flex items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+          <a
+            href="1 Home Hub.html"
+            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+            <i class="fa-solid fa-arrow-left text-sm"></i>
+          </a>
+          <span class="ml-3 text-xl font-bold tracking-tight text-brand-text"
+            >Sign In</span
+          >
+        </header>
+
+        <!-- Form -->
+        <main
+          class="flex-1 overflow-y-auto no-scrollbar px-6 pt-8 pb-24 flex flex-col gap-8">
+          <div class="md:max-w-md md:mx-auto w-full flex flex-col gap-8">
+            <!-- Brand mark (mobile / right panel) -->
+            <div class="flex flex-col items-center gap-2 mt-2 md:hidden">
+              <div
+                class="w-16 h-16 rounded-[20px] bg-brand-orange flex items-center justify-center shadow-[0_4px_0_0_#000] border-2 border-black">
+                <i class="fa-solid fa-book-open text-2xl text-white"></i>
+              </div>
+              <h1
+                class="text-2xl font-extrabold text-brand-text tracking-tight mt-2">
+                ShobdoLab
+              </h1>
+              <p class="text-sm text-gray-500 font-medium">
+                Welcome back! Continue your streak.
+              </p>
+            </div>
+
+            <!-- Desktop greeting -->
+            <div class="hidden md:block">
+              <h2 class="text-3xl font-black text-gray-900">Sign In</h2>
+              <p class="text-gray-500 mt-1 font-medium">
+                Welcome back! Continue your streak.
+              </p>
+            </div>
+
+            <!-- Social login -->
+            <div class="flex flex-col gap-3">
               <button
-                id="toggle-pw"
-                type="button"
-                class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="Toggle password visibility">
-                <i id="pw-icon" class="fa-regular fa-eye text-sm"></i>
+                class="w-full flex items-center justify-center gap-3 border-2 border-brand-border rounded-2xl py-3.5 bg-white hover:bg-gray-50 transition-colors font-semibold text-sm text-gray-700 shadow-sm">
+                <img
+                  src="https://www.svgrepo.com/show/475656/google-color.svg"
+                  alt="Google"
+                  class="w-5 h-5" />
+                Continue with Google
               </button>
             </div>
-          </div>
-        </div>
 
-        <!-- Sign In button -->
-        <div class="flex flex-col gap-4">
-          <button
-            id="login-btn"
-            type="button"
-            class="w-full text-left group relative">
-            <div
-              class="absolute inset-0 bg-brand-orange rounded-[20px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
-            <div
-              class="relative bg-brand-orange border-2 border-black rounded-[20px] py-4 flex items-center justify-center gap-2 transform group-hover:-translate-y-0.5 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
-              <span class="text-white font-extrabold text-base">Sign In</span>
-              <i class="fa-solid fa-arrow-right text-white text-sm"></i>
+            <!-- Divider -->
+            <div class="flex items-center gap-3">
+              <div class="flex-1 h-px bg-brand-border"></div>
+              <span
+                class="text-xs font-semibold text-gray-400 uppercase tracking-wider"
+                >or</span
+              >
+              <div class="flex-1 h-px bg-brand-border"></div>
             </div>
-          </button>
 
-          <!-- Sign up link -->
-          <p class="text-center text-sm text-gray-500">
-            Don't have an account?
-            <a
-              href="signup.html"
-              class="text-brand-blue font-bold hover:underline"
-              >Create one</a
-            >
-          </p>
-        </div>
+            <!-- Fields -->
+            <div class="flex flex-col gap-4">
+              <div class="flex flex-col gap-1.5">
+                <label
+                  for="email"
+                  class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                  >Email</label
+                >
+                <div class="relative">
+                  <span
+                    class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    ><i class="fa-regular fa-envelope text-sm"></i
+                  ></span>
+                  <input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    class="brand-input w-full pl-10 pr-4 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
+                    autocomplete="email" />
+                </div>
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <div class="flex justify-between items-center">
+                  <label
+                    for="password"
+                    class="text-xs font-bold text-gray-600 uppercase tracking-wider"
+                    >Password</label
+                  >
+                  <a
+                    href="#"
+                    class="text-xs font-semibold text-brand-blue hover:underline"
+                    >Forgot password?</a
+                  >
+                </div>
+                <div class="relative">
+                  <span
+                    class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+                    ><i class="fa-solid fa-lock text-sm"></i
+                  ></span>
+                  <input
+                    id="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    class="brand-input w-full pl-10 pr-12 py-4 rounded-2xl border-2 border-brand-border bg-white text-sm font-semibold text-gray-900 placeholder-gray-300"
+                    autocomplete="current-password" />
+                  <button
+                    id="toggle-pw"
+                    type="button"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    aria-label="Toggle password visibility">
+                    <i id="pw-icon" class="fa-regular fa-eye text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <!-- Progress reminder -->
-        <div
-          class="bg-brand-purple/20 border border-brand-purple/30 rounded-2xl p-4 flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-full bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
-            <i class="fa-solid fa-fire text-sm"></i>
+            <!-- Sign In button -->
+            <div class="flex flex-col gap-4">
+              <button
+                id="login-btn"
+                type="button"
+                class="w-full text-left group relative">
+                <div
+                  class="absolute inset-0 bg-brand-orange rounded-[20px] transform translate-y-1 group-active:translate-y-0 transition-transform"></div>
+                <div
+                  class="relative bg-brand-orange border-2 border-black rounded-[20px] py-4 flex items-center justify-center gap-2 transform group-hover:-translate-y-0.5 group-active:translate-y-0 transition-transform shadow-[0_4px_0_0_#000000]">
+                  <span class="text-white font-extrabold text-base"
+                    >Sign In</span
+                  >
+                  <i class="fa-solid fa-arrow-right text-white text-sm"></i>
+                </div>
+              </button>
+              <p class="text-center text-sm text-gray-500">
+                Don't have an account?
+                <a
+                  href="0.1 Sign Up.html"
+                  class="text-brand-blue font-bold hover:underline"
+                  >Create one</a
+                >
+              </p>
+            </div>
+
+            <!-- Streak reminder -->
+            <div
+              class="bg-brand-purple/20 border border-brand-purple/30 rounded-2xl p-4 flex items-center gap-3">
+              <div
+                class="w-10 h-10 rounded-full bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
+                <i class="fa-solid fa-fire text-sm"></i>
+              </div>
+              <div>
+                <p class="text-sm font-bold text-gray-900">
+                  Keep your streak alive!
+                </p>
+                <p class="text-xs text-gray-500 mt-0.5">
+                  Sign in to continue your streak 🔥
+                </p>
+              </div>
+            </div>
           </div>
-          <div>
-            <p class="text-sm font-bold text-gray-900">
-              Keep your streak alive!
-            </p>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Sign in to continue your streak 🔥
-            </p>
-          </div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
 
     <script>
-      // Password toggle
       const pwInput = document.getElementById("password");
       const pwIcon = document.getElementById("pw-icon");
       document.getElementById("toggle-pw").addEventListener("click", () => {

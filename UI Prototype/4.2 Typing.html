@@ -2,9 +2,7 @@
 <html lang="en">
   <head>
     <script>
-      window.FontAwesomeConfig = {
-        autoReplaceSvg: "nest",
-      };
+      window.FontAwesomeConfig = { autoReplaceSvg: "nest" };
     </script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
@@ -12,7 +10,7 @@
       referrerpolicy="no-referrer"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Language Learning - Quiz - Typing Mode</title>
+    <title>ShobdoLab - Typing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -29,9 +27,7 @@
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
+            fontFamily: { sans: ["Inter", "sans-serif"] },
             colors: {
               brand: {
                 bg: "#FAFAFA",
@@ -45,8 +41,8 @@
               },
             },
             boxShadow: {
-              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
-              card: "0 2px 10px rgba(0, 0, 0, 0.02)",
+              soft: "0 4px 20px -2px rgba(0,0,0,0.05)",
+              card: "0 2px 10px rgba(0,0,0,0.02)",
             },
           },
         },
@@ -60,14 +56,12 @@
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
-
       .bg-grid {
         background-size: 40px 40px;
         background-image:
           linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       }
-
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
@@ -75,15 +69,11 @@
         -ms-overflow-style: none;
         scrollbar-width: none;
       }
-
-      /* Input focus animation */
       .typing-input:focus {
         outline: none;
         border-color: #f47c7c;
         box-shadow: 0 0 0 4px rgba(244, 124, 124, 0.1);
       }
-
-      /* Floating shapes inspired by reference */
       .shape-circle {
         position: absolute;
         border-radius: 50%;
@@ -102,103 +92,100 @@
     </style>
   </head>
   <body
-    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
-    <div
-      id="app-container"
-      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid pb-20">
-      <!-- Decorative Background Elements from Reference -->
+    class="bg-brand-bg text-brand-text min-h-[100dvh] overflow-x-hidden bg-grid">
+    <div class="min-h-[100dvh] flex flex-col bg-white relative">
+      <!-- Decorative -->
       <div class="shape-circle w-4 h-4 top-32 left-8"></div>
       <div class="shape-triangle top-40 right-12"></div>
       <div class="absolute top-64 left-10 text-brand-blue opacity-20 text-xl">
         <i class="fa-solid fa-play"></i>
       </div>
 
-      <!-- Header Section -->
+      <!-- Header -->
       <header
-        id="header"
-        class="px-6 pt-12 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
-        <div class="flex items-center gap-3 w-full justify-between">
+        class="px-4 md:px-0 pt-12 md:pt-6 pb-4 bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+        <div
+          class="w-full md:max-w-2xl md:mx-auto flex items-center gap-3 px-0 md:px-6">
           <button
-            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+            class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors shrink-0">
             <i class="fa-solid fa-xmark text-sm"></i>
           </button>
-          <div class="flex-1 px-4">
+          <div class="flex-1">
             <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
               <div
                 class="h-full bg-brand-blue w-[40%] rounded-full transition-all duration-300"></div>
             </div>
           </div>
-          <span class="text-sm font-bold text-gray-400">4/10</span>
+          <span class="text-sm font-bold text-gray-400 shrink-0">4/10</span>
         </div>
       </header>
 
-      <!-- Main Content Area -->
+      <!-- Main -->
       <main
-        id="main-content"
-        class="flex-1 overflow-y-auto no-scrollbar pb-24 px-6 pt-12 flex flex-col gap-10 relative z-10">
-        <!-- Question Prompt -->
-        <div id="question-prompt" class="flex flex-col gap-4 text-center mt-4">
-          <span
-            class="text-xs font-bold text-brand-blue uppercase tracking-wider"
-            >Type the translation</span
-          >
-          <h2 class="text-4xl font-extrabold text-gray-900 tracking-tight">
-            Apple
-          </h2>
-
-          <div class="flex items-center justify-center gap-2 mt-2">
-            <button
-              class="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
-              <i class="fa-solid fa-volume-high text-sm"></i>
-            </button>
-            <button
-              class="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
-              <i class="fa-solid fa-turtle text-sm"></i>
-            </button>
+        class="flex-1 overflow-y-auto no-scrollbar pb-32 px-6 pt-12 relative z-10">
+        <div class="w-full md:max-w-xl md:mx-auto flex flex-col gap-10">
+          <!-- Question -->
+          <div class="flex flex-col gap-4 text-center mt-4">
+            <span
+              class="text-xs font-bold text-brand-blue uppercase tracking-wider"
+              >Type the translation</span
+            >
+            <h2 class="text-4xl font-extrabold text-gray-900 tracking-tight">
+              Apple
+            </h2>
+            <div class="flex items-center justify-center gap-2 mt-2">
+              <button
+                class="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
+                <i class="fa-solid fa-volume-high text-sm"></i>
+              </button>
+              <button
+                class="w-10 h-10 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-100 transition-colors shadow-sm">
+                <i class="fa-solid fa-turtle text-sm"></i>
+              </button>
+            </div>
           </div>
-        </div>
 
-        <!-- Typing Input Area -->
-        <div
-          id="typing-input-container"
-          class="flex flex-col gap-3 mt-4 relative">
-          <input
-            type="text"
-            placeholder="Type your answer here..."
-            class="typing-input w-full text-center text-xl font-semibold p-5 rounded-2xl border-2 border-brand-border bg-white shadow-sm transition-all text-gray-900 placeholder-gray-300"
-            autocomplete="off"
-            autocorrect="off"
-            spellcheck="false" />
-          <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
-            <i class="fa-solid fa-keyboard"></i>
+          <!-- Input -->
+          <div class="flex flex-col gap-3 mt-4 relative">
+            <input
+              type="text"
+              placeholder="Type your answer here..."
+              class="typing-input w-full text-center text-xl font-semibold p-5 rounded-2xl border-2 border-brand-border bg-white shadow-sm transition-all text-gray-900 placeholder-gray-300"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false" />
+            <div
+              class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-300">
+              <i class="fa-solid fa-keyboard"></i>
+            </div>
           </div>
-        </div>
 
-        <!-- Feedback / Correction Panel -->
-        <div
-          id="feedback-correction-panel"
-          class="bg-brand-green/10 border border-brand-green/20 rounded-2xl p-4 flex gap-3 items-start animate-fade-in mt-2">
+          <!-- Feedback -->
           <div
-            class="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center shrink-0 mt-0.5">
-            <i class="fa-solid fa-thumbs-up text-sm"></i>
-          </div>
-          <div class="flex flex-col">
-            <h4 class="text-sm font-bold text-gray-900">Excellent!</h4>
-            <p class="text-xs text-gray-600 mt-1">"Apple" means আপেল!</p>
+            class="bg-brand-green/10 border border-brand-green/20 rounded-2xl p-4 flex gap-3 items-start mt-2">
+            <div
+              class="w-8 h-8 rounded-full bg-brand-green text-white flex items-center justify-center shrink-0 mt-0.5">
+              <i class="fa-solid fa-thumbs-up text-sm"></i>
+            </div>
+            <div class="flex flex-col">
+              <h4 class="text-sm font-bold text-gray-900">Excellent!</h4>
+              <p class="text-xs text-gray-600 mt-1">"Apple" means আপেল!</p>
+            </div>
           </div>
         </div>
       </main>
 
-      <!-- Primary Action Footer -->
+      <!-- Action Footer -->
       <div
-        id="primary-action-footer"
-        class="absolute bottom-20 left-0 w-full px-6 bg-white/90 backdrop-blur-sm border-t border-gray-100 z-40">
-        <a href="4.3 Result.html">
-          <button
-            class="w-full bg-brand-blue text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(142,155,250,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
-            Check <i class="fa-solid fa-check text-sm ml-1"></i>
-          </button>
-        </a>
+        class="border-t border-gray-100 bg-white/90 backdrop-blur-sm px-6 py-4">
+        <div class="w-full md:max-w-xl md:mx-auto">
+          <a href="4.3 Result.html">
+            <button
+              class="w-full bg-brand-blue text-white font-extrabold text-lg py-4 rounded-2xl shadow-[0_8px_20px_-4px_rgba(142,155,250,0.4)] transform hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2">
+              Check <i class="fa-solid fa-check text-sm ml-1"></i>
+            </button>
+          </a>
+        </div>
       </div>
     </div>
   </body>

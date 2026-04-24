@@ -1,9 +1,8 @@
+<!doctype html>
 <html lang="en">
   <head>
     <script>
-      window.FontAwesomeConfig = {
-        autoReplaceSvg: "nest",
-      };
+      window.FontAwesomeConfig = { autoReplaceSvg: "nest" };
     </script>
     <script
       src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"
@@ -11,12 +10,12 @@
       referrerpolicy="no-referrer"></script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Language Learning - Study List</title>
+    <title>ShobdoLab - Learn</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet" />
     <link
       rel="stylesheet"
@@ -28,9 +27,7 @@
       tailwind.config = {
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Inter", "sans-serif"],
-            },
+            fontFamily: { sans: ["Inter", "sans-serif"] },
             colors: {
               brand: {
                 bg: "#FAFAFA",
@@ -44,8 +41,8 @@
               },
             },
             boxShadow: {
-              soft: "0 4px 20px -2px rgba(0, 0, 0, 0.05)",
-              card: "0 2px 10px rgba(0, 0, 0, 0.02)",
+              soft: "0 4px 20px -2px rgba(0,0,0,0.05)",
+              card: "0 2px 10px rgba(0,0,0,0.02)",
             },
           },
         },
@@ -59,39 +56,19 @@
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
       }
-
-      /* Grid background pattern */
       .bg-grid {
         background-size: 40px 40px;
         background-image:
           linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
           linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
       }
-
-      /* Hide scrollbar for Chrome, Safari and Opera */
       .no-scrollbar::-webkit-scrollbar {
         display: none;
       }
-
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
         -ms-overflow-style: none;
-        /* IE and Edge */
         scrollbar-width: none;
-        /* Firefox */
       }
-
-      /* Custom toggle switch */
-      .toggle-checkbox:checked {
-        right: 0;
-        border-color: #a1e8af;
-      }
-
-      .toggle-checkbox:checked + .toggle-label {
-        background-color: #a1e8af;
-      }
-
-      /* Word list visual polish */
       #word-list > div {
         position: relative;
         overflow: hidden;
@@ -99,7 +76,6 @@
         background: linear-gradient(180deg, #ffffff 0%, #fcfdff 100%);
         box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06);
       }
-
       #word-list > div::before {
         content: "";
         position: absolute;
@@ -110,89 +86,166 @@
         background: linear-gradient(180deg, #8e9bfa 0%, #7dd3fc 100%);
         opacity: 0.75;
       }
-
       #word-list > div:hover {
         transform: translateY(-3px);
         box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
       }
-
       #word-list h3 {
         letter-spacing: -0.02em;
       }
-
       #word-list span {
         background-color: #eef2ff !important;
         color: #334155 !important;
         border: 1px solid #dbeafe;
       }
-
       #word-list p {
         color: #0f766e !important;
       }
+      .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 16px;
+        border-radius: 16px;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: 14px;
+        text-decoration: none;
+        transition: all 0.15s;
+      }
+      .sidebar-link:hover {
+        background: #f9fafb;
+        color: #111827;
+      }
+      .sidebar-link.active {
+        background: rgba(244, 124, 124, 0.1);
+        color: #f47c7c;
+      }
+      .sidebar-link .icon {
+        width: 20px;
+        text-align: center;
+      }
     </style>
   </head>
-
-  <body
-    class="bg-brand-bg text-brand-text min-h-[100dvh] flex justify-center m-0 p-0 overflow-x-hidden">
-    <!-- Mobile App Container -->
-    <div
-      id="app-container"
-      class="w-full max-w-[375px] min-h-[100dvh] bg-white relative flex flex-col shadow-2xl mx-auto overflow-hidden bg-grid">
-      <!-- Main Content Area -->
-      <main
-        id="main-content"
-        class="flex-1 overflow-y-auto no-scrollbar pb-32 px-6 pt-8 gap-4 block relative z-10">
-        <div class="flex flex-col gap-4 mb-6">
-          <div class="flex items-center justify-between">
-            <div class="flex flex-col">
-              <h2 class="text-3xl font-black tracking-tight text-gray-900">
-                Learn
-              </h2>
-              <div class="flex items-center gap-2 mt-1.5">
-                <span
-                  class="bg-brand-blue/10 text-brand-blue px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
-                  >Vocabulary</span
-                >
-                <p class="text-sm font-medium text-gray-500">10 Words</p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            class="bg-gradient-to-br from-brand-blue to-[#B2B9FA] p-5 rounded-[24px] text-white shadow-[0_8px_30px_rgba(142,155,250,0.3)] relative overflow-hidden flex justify-between items-center group cursor-pointer hover:-translate-y-1 transition-transform duration-300">
+  <body class="bg-brand-bg text-brand-text min-h-[100dvh] overflow-x-hidden">
+    <div id="app-container" class="flex min-h-[100dvh] bg-white bg-grid">
+      <!-- Sidebar -->
+      <aside
+        class="hidden md:flex flex-col w-64 lg:w-72 bg-white border-r border-brand-border sticky top-0 h-screen shrink-0 overflow-y-auto">
+        <div class="p-6 flex flex-col gap-6 h-full">
+          <div class="flex items-center gap-3 pt-2">
             <div
-              class="absolute -right-6 -bottom-6 opacity-20 transform -rotate-12 transition-transform duration-500 group-hover:rotate-0">
-              <i class="fa-solid fa-shapes text-8xl"></i>
+              class="w-11 h-11 rounded-[14px] bg-brand-orange flex items-center justify-center shadow-[0_3px_0_0_#000] border-2 border-black shrink-0">
+              <i class="fa-solid fa-book-open text-white text-sm"></i>
             </div>
-            <div class="relative z-10 flex flex-col gap-1.5">
-              <span
-                class="text-white/80 text-xs font-bold uppercase tracking-widest"
-                >Ready for more?
-              </span>
-              <span class="font-extrabold text-lg">Next Set</span>
-            </div>
-            <button
-              class="relative z-10 bg-white text-brand-blue w-20 h-11 rounded-[20px] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md">
-              <i class="fa-solid fa-arrow-right"></i>
-            </button>
+            <span class="text-xl font-extrabold tracking-tight text-brand-text"
+              >ShobdoLab</span
+            >
           </div>
-
-          <div class="flex items-center gap-3 mt-2">
-            <div class="h-[1px] flex-1 bg-gray-200"></div>
-            <p
-              class="text-[12px] font-extrabold text-gray-400 uppercase tracking-widest">
-              Current Words
-            </p>
-            <div class="h-[1px] flex-1 bg-gray-200"></div>
+          <nav class="flex flex-col gap-1 flex-1 mt-2">
+            <a href="1 Home Hub.html" class="sidebar-link"
+              ><i class="fa-solid fa-house icon"></i><span>Home</span></a
+            >
+            <a href="2 Learn.html" class="sidebar-link active"
+              ><i class="fa-solid fa-book icon"></i><span>Learn</span></a
+            >
+            <a href="3 Revise.html" class="sidebar-link"
+              ><i class="fa-solid fa-rotate-right icon"></i
+              ><span>Revise</span></a
+            >
+            <a href="4 Exercise.html" class="sidebar-link"
+              ><i class="fa-solid fa-dumbbell icon"></i><span>Exercise</span></a
+            >
+          </nav>
+          <div
+            class="bg-brand-purple/20 border border-brand-purple/30 rounded-2xl p-4 flex items-center gap-3">
+            <div
+              class="w-9 h-9 rounded-full bg-brand-purple flex items-center justify-center text-purple-700 shrink-0">
+              <i class="fa-solid fa-fire text-sm"></i>
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-900">12-Day Streak!</p>
+              <p class="text-xs text-gray-500">Keep it up 🔥</p>
+            </div>
           </div>
         </div>
-        <!-- Word List -->
-        <div id="word-list" class="flex flex-col gap-4">
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+      </aside>
+
+      <!-- Content -->
+      <div
+        class="flex-1 flex flex-col md:overflow-y-auto min-h-[100dvh] md:min-h-0">
+        <!-- Header -->
+        <header
+          class="px-6 md:px-10 pt-12 md:pt-6 pb-4 flex justify-between items-center bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-brand-border">
+          <h1 class="text-xl font-bold tracking-tight text-brand-text">
+            Learn
+          </h1>
+          <div class="flex items-center gap-3">
+            <button
+              class="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors">
+              <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+            </button>
+          </div>
+        </header>
+
+        <!-- Main -->
+        <main
+          id="main-content"
+          class="flex-1 no-scrollbar pb-24 md:pb-12 px-6 md:px-10 pt-8 gap-4 block relative z-10">
+          <div class="md:max-w-2xl md:mx-auto w-full">
+            <div class="flex flex-col gap-4 mb-6">
+              <div class="flex items-center justify-between">
+                <div class="flex flex-col">
+                  <h2 class="text-3xl font-black tracking-tight text-gray-900">
+                    Learn
+                  </h2>
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <span
+                      class="bg-brand-blue/10 text-brand-blue px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider"
+                      >Vocabulary</span
+                    >
+                    <p class="text-sm font-medium text-gray-500">10 Words</p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                class="bg-gradient-to-br from-brand-blue to-[#B2B9FA] p-5 rounded-[24px] text-white shadow-[0_8px_30px_rgba(142,155,250,0.3)] relative overflow-hidden flex justify-between items-center group cursor-pointer hover:-translate-y-1 transition-transform duration-300">
+                <div
+                  class="absolute -right-6 -bottom-6 opacity-20 transform -rotate-12 transition-transform duration-500 group-hover:rotate-0">
+                  <i class="fa-solid fa-shapes text-8xl"></i>
+                </div>
+                <div class="relative z-10 flex flex-col gap-1.5">
+                  <span
+                    class="text-white/80 text-xs font-bold uppercase tracking-widest"
+                    >Ready for more?</span
+                  >
+                  <span class="font-extrabold text-lg">Next Set</span>
+                </div>
+                <button
+                  class="relative z-10 bg-white text-brand-blue w-20 h-11 rounded-[20px] flex items-center justify-center hover:scale-105 active:scale-95 transition-all shadow-md">
+                  <i class="fa-solid fa-arrow-right"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center gap-3 mt-2">
+                <div class="h-[1px] flex-1 bg-gray-200"></div>
+                <p
+                  class="text-[12px] font-extrabold text-gray-400 uppercase tracking-widest">
+                  Current Words
+                </p>
+                <div class="h-[1px] flex-1 bg-gray-200"></div>
+              </div>
+            </div>
+
+            <!-- Word List -->
+            <div
+              id="word-list"
+              class="flex flex-col gap-4 md:grid md:grid-cols-2 lg:grid-cols-2">
+              <!-- Word items -->
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Apple
                   </h3>
@@ -201,19 +254,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">আপেল</p>
+                </div>
               </div>
-            </div>
-
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">আপেল</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Perfidious
                   </h3>
@@ -222,19 +269,13 @@
                     >adjective</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">বিশ্বাসঘাতক</p>
+                </div>
               </div>
-            </div>
-
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">বিশ্বাসঘাতক</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Water
                   </h3>
@@ -243,19 +284,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">জল, পানি</p>
+                </div>
               </div>
-            </div>
-
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">জল, পানি</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Bread
                   </h3>
@@ -264,18 +299,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">রুটি</p>
+                </div>
               </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">রুটি</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Cheese
                   </h3>
@@ -284,18 +314,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">পনির</p>
+                </div>
               </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">পনির</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Chicken
                   </h3>
@@ -304,18 +329,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">মুরগি</p>
+                </div>
               </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">মুরগি</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Meat
                   </h3>
@@ -324,18 +344,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">মাংস</p>
+                </div>
               </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">মাংস</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Milk
                   </h3>
@@ -344,18 +359,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">দুধ</p>
+                </div>
               </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">দুধ</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Fish
                   </h3>
@@ -364,18 +374,13 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">মাছ</p>
+                </div>
               </div>
-            </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">মাছ</p>
-            </div>
-          </div>
-
-          <div
-            class="bg-white border border-gray-200 rounded-[20px] p-5 shadow-[0_8px_22px_rgba(17,24,39,0.04)] hover:shadow-[0_12px_28px_rgba(17,24,39,0.08)] hover:-translate-y-0.5 transition-all duration-300">
-            <div class="flex justify-between items-start mb-2">
-              <div class="w-full">
-                <div class="flex items-start justify-between gap-3">
+              <div
+                class="bg-white border border-gray-200 rounded-[20px] p-5 hover:-translate-y-0.5 transition-all duration-300">
+                <div class="flex items-start justify-between gap-3 mb-2">
                   <h3 class="text-2xl font-black text-gray-900 tracking-tight">
                     Egg
                   </h3>
@@ -384,52 +389,52 @@
                     >noun</span
                   >
                 </div>
+                <div class="mt-3 pt-3 border-t border-gray-100">
+                  <p class="text-lg font-bold text-brand-green">ডিম</p>
+                </div>
               </div>
             </div>
-            <div class="mt-3 pt-3 border-t border-gray-100">
-              <p class="text-lg font-bold text-brand-green">ডিম</p>
-            </div>
           </div>
-        </div>
-      </main>
-
-      <!-- Bottom Navigation Bar -->
-      <nav
-        id="bottom-nav"
-        class="absolute bottom-0 left-0 w-full bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
-        <a
-          href="1 Home Hub.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-house text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Home</span> </a
-        ><a
-          href="2 Learn.html"
-          class="flex flex-col items-center gap-1 text-black">
-          <div
-            class="w-10 h-10 rounded-full bg-brand-orange/10 flex items-center justify-center text-brand-orange">
-            <i class="fa-solid fa-book text-lg"></i>
-          </div>
-          <span class="text-[10px] font-semibold text-brand-orange"
-            >Learn</span
-          > </a
-        ><a
-          href="3 Revise.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-rotate-right text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Revise</span> </a
-        ><a
-          href="4 Exercise.html"
-          class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
-          <div class="w-10 h-10 rounded-full flex items-center justify-center">
-            <i class="fa-solid fa-dumbbell text-lg"></i>
-          </div>
-          <span class="text-[10px] font-medium">Exercise</span>
-        </a>
-      </nav>
+        </main>
+      </div>
     </div>
+
+    <!-- Bottom Nav (mobile only) -->
+    <nav
+      class="fixed bottom-0 left-0 right-0 md:hidden bg-white border-t border-gray-100 px-6 py-4 flex justify-between items-center z-50 pb-8">
+      <a
+        href="1 Home Hub.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-house text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Home</span>
+      </a>
+      <a
+        href="2 Learn.html"
+        class="flex flex-col items-center gap-1 text-black">
+        <div
+          class="w-10 h-10 rounded-full bg-brand-orange/10 flex items-center justify-center text-brand-orange">
+          <i class="fa-solid fa-book text-lg"></i>
+        </div>
+        <span class="text-[10px] font-semibold text-brand-orange">Learn</span>
+      </a>
+      <a
+        href="3 Revise.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-rotate-right text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Revise</span>
+      </a>
+      <a
+        href="4 Exercise.html"
+        class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition-colors">
+        <div class="w-10 h-10 rounded-full flex items-center justify-center">
+          <i class="fa-solid fa-dumbbell text-lg"></i>
+        </div>
+        <span class="text-[10px] font-medium">Exercise</span>
+      </a>
+    </nav>
   </body>
 </html>
