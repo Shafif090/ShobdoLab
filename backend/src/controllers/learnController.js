@@ -101,15 +101,46 @@ async function getLearningSetWithItems(db, setRow) {
   };
 }
 
-async function chooseWordsForSet(db, userId, desiredCount = DEFAULT_SET_SIZE) {
+async function chooseWordsForSet(
+  db,
+  userId,
+  desiredCount = DEFAULT_SET_SIZE,
+  excludedIds = [],
+) {
   const { data: userWords, error: userWordsError } = await db
     .from("user_words")
     .select("word_id, status, strength, mistakes, seen_count, next_review_at")
-    .eq("user_id", userId)
-    .limit(100);
+    .eq("user_id", userId);
 
   if (userWordsError) {
     throw userWordsError;
+  }
+
+  const excluded = new Set(excludedIds);
+  const seenWordIds = new Set((userWords || []).map((row) => row.word_id));
+  const selectedWords = [];
+
+  let unseenQuery = db
+    .from("words")
+    .select("id, english, bangla, pos, root, family_id, is_active")
+    .eq("is_active", true)
+    .order("id", { ascending: true })
+    .limit(desiredCount);
+
+  const blockedIds = [...new Set([...seenWordIds, ...excluded])];
+  if (blockedIds.length > 0) {
+    unseenQuery = unseenQuery.not("id", "in", `(${blockedIds.join(",")})`);
+  }
+
+  const { data: unseenWords, error: unseenError } = await unseenQuery;
+  if (unseenError) {
+    throw unseenError;
+  }
+
+  selectedWords.push(...(unseenWords || []));
+
+  if (selectedWords.length >= desiredCount) {
+    return selectedWords.slice(0, desiredCount);
   }
 
   const statusRank = {
@@ -138,9 +169,9 @@ async function chooseWordsForSet(db, userId, desiredCount = DEFAULT_SET_SIZE) {
   });
 
   const selectedWordIds = prioritizedUserWords
-    .slice(0, desiredCount)
+    .filter((row) => !excluded.has(row.word_id))
+    .slice(0, desiredCount - selectedWords.length)
     .map((row) => row.word_id);
-  const selectedWords = [];
 
   if (selectedWordIds.length > 0) {
     const { data: words, error: selectedWordsError } = await db
@@ -161,7 +192,9 @@ async function chooseWordsForSet(db, userId, desiredCount = DEFAULT_SET_SIZE) {
   }
 
   if (selectedWords.length < desiredCount) {
-    const excluded = [...new Set(selectedWords.map((word) => word.id))];
+    const excludedFallbackIds = [
+      ...new Set([...selectedWords.map((word) => word.id), ...excluded]),
+    ];
     let query = db
       .from("words")
       .select("id, english, bangla, pos, root, family_id, is_active")
@@ -169,8 +202,8 @@ async function chooseWordsForSet(db, userId, desiredCount = DEFAULT_SET_SIZE) {
       .order("id", { ascending: true })
       .limit(desiredCount - selectedWords.length);
 
-    if (excluded.length > 0) {
-      query = query.not("id", "in", `(${excluded.join(",")})`);
+    if (excludedFallbackIds.length > 0) {
+      query = query.not("id", "in", `(${excludedFallbackIds.join(",")})`);
     }
 
     const { data: fallbackWords, error: fallbackError } = await query;
@@ -185,9 +218,14 @@ async function chooseWordsForSet(db, userId, desiredCount = DEFAULT_SET_SIZE) {
   return selectedWords.slice(0, desiredCount);
 }
 
-async function createLearningSet(db, userId) {
+async function createLearningSet(db, userId, excludedIds = []) {
   const latestSetIndex = await getLatestSetIndex(db, userId);
-  const words = await chooseWordsForSet(db, userId, DEFAULT_SET_SIZE);
+  const words = await chooseWordsForSet(
+    db,
+    userId,
+    DEFAULT_SET_SIZE,
+    excludedIds,
+  );
 
   if (words.length === 0) {
     return null;
@@ -280,16 +318,22 @@ export async function createNextSet(req, res) {
   try {
     const db = req.supabase || supabase;
     const activeSet = await getActiveLearningSet(db, req.userId);
+    let excludedIds = [];
 
     if (activeSet) {
       const hydratedSet = await getLearningSetWithItems(db, activeSet);
-      return res.json({
-        status: "existing",
-        set: hydratedSet,
-      });
+      excludedIds = hydratedSet.items.flatMap((item) =>
+        item.word?.id ? [item.word.id] : [],
+      );
+
+      await db
+        .from("learning_sets")
+        .update({ state: activeSet.state === "in_quiz" ? "completed" : "expired" })
+        .eq("id", activeSet.id)
+        .eq("user_id", req.userId);
     }
 
-    const createdSet = await createLearningSet(db, req.userId);
+    const createdSet = await createLearningSet(db, req.userId, excludedIds);
 
     if (!createdSet) {
       return jsonError(

@@ -1,35 +1,35 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import { Stack, router } from "expo-router";
+import { useEffect, useState } from "react";
+import { getAccessToken } from "@/lib/session";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+export default function TabsLayout() {
+  const [authChecked, setAuthChecked] = useState(false);
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  useEffect(() => {
+    let active = true;
 
-  return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
-  );
+    async function verifySession() {
+      const token = await getAccessToken();
+      if (!active) return;
+
+      if (!token) {
+        router.replace("/login");
+        return;
+      }
+
+      setAuthChecked(true);
+    }
+
+    void verifySession();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  if (!authChecked) {
+    return null;
+  }
+
+  return <Stack screenOptions={{ headerShown: false }} />;
 }

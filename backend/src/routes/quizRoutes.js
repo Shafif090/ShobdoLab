@@ -3,6 +3,7 @@ import {
   finishQuizSession,
   getQuizResult,
   getQuizSession,
+  retryQuizSession,
   submitQuizAnswer,
 } from "../controllers/quizController.js";
 import { requireUserId } from "../middleware/requireUserId.js";
@@ -14,5 +15,6 @@ router.get("/:sessionId", getQuizSession);
 router.post("/:sessionId/answer", submitQuizAnswer);
 router.post("/:sessionId/finish", finishQuizSession);
 router.get("/:sessionId/result", getQuizResult);
+router.post("/:sessionId/retry", retryQuizSession);
 
 export default router;

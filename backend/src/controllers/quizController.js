@@ -1,4 +1,9 @@
 import { supabase } from "../lib/supabaseClient.js";
+import {
+  createQuizSessionFromWords,
+  fillWords,
+  getWordsByIds,
+} from "./quizSessionBuilder.js";
 
 function jsonError(res, status, code, message, details = null) {
   return res.status(status).json({
@@ -78,6 +83,11 @@ async function getSessionAttempts(db, sessionId) {
   }
 
   return data || [];
+}
+
+function formatAnswerList(value) {
+  const values = Array.isArray(value) ? value.flat(Infinity) : [value];
+  return values.filter(Boolean).join(", ");
 }
 
 async function getCurrentQuizItem(db, session) {
@@ -328,8 +338,29 @@ export async function getQuizResult(req, res) {
     }
 
     const attempts = await getSessionAttempts(db, session.id);
+    const items = await getSessionItems(db, session.id);
+    const itemById = new Map(items.map((item) => [item.id, item]));
+    const wordIds = [...new Set(items.map((item) => item.word_id))];
+    const words = await getWordsByIds(db, wordIds);
+    const wordById = new Map(words.map((word) => [word.id, word]));
     const accuracy =
       session.total_items > 0 ? session.correct_items / session.total_items : 0;
+    const incorrectItems = attempts
+      .filter((attempt) => !attempt.is_correct)
+      .map((attempt) => {
+        const item = itemById.get(attempt.quiz_item_id);
+        const word = wordById.get(attempt.word_id);
+
+        return {
+          wordId: attempt.word_id,
+          word: word?.english ?? item?.prompt_text ?? String(attempt.word_id),
+          yourAnswer: attempt.user_answer,
+          correctAnswer: formatAnswerList(item?.accepted_answers),
+          correctAnswers: Array.isArray(item?.accepted_answers)
+            ? item.accepted_answers.flat(Infinity)
+            : [item?.accepted_answers].filter(Boolean),
+        };
+      });
 
     return res.json({
       session,
@@ -340,6 +371,13 @@ export async function getQuizResult(req, res) {
         incorrectItems: session.incorrect_items,
         accuracy,
       },
+      incorrectItems,
+      canRetry: session.retry_no < session.max_retries,
+      retryAction: {
+        endpoint: `/v1/quiz/${session.id}/retry`,
+        maxRetries: session.max_retries,
+        retryNo: session.retry_no,
+      },
     });
   } catch (error) {
     return jsonError(
@@ -347,6 +385,98 @@ export async function getQuizResult(req, res) {
       500,
       "RESULT_FAILED",
       error.message || "Failed to load quiz result.",
+    );
+  }
+}
+
+export async function retryQuizSession(req, res) {
+  try {
+    const db = req.supabase || supabase;
+    const session = await getSession(db, req.userId, req.params.sessionId);
+
+    if (!session) {
+      return jsonError(
+        res,
+        404,
+        "SESSION_NOT_FOUND",
+        "Quiz session not found for this user.",
+      );
+    }
+
+    if (session.retry_no >= session.max_retries) {
+      return jsonError(
+        res,
+        409,
+        "RETRY_LIMIT_REACHED",
+        "This quiz session has no retries left.",
+      );
+    }
+
+    const attempts = await getSessionAttempts(db, session.id);
+    if (attempts.length === 0) {
+      return jsonError(
+        res,
+        400,
+        "NO_ATTEMPTS_TO_RETRY",
+        "Answer at least one item before retrying this session.",
+      );
+    }
+
+    const incorrectWordIds = attempts
+      .filter((attempt) => !attempt.is_correct)
+      .map((attempt) => attempt.word_id);
+    const correctWordIds = attempts
+      .filter((attempt) => attempt.is_correct)
+      .map((attempt) => attempt.word_id);
+
+    const targetCount = session.total_items;
+    const incorrectTarget = Math.ceil(targetCount * 0.7);
+    const selectedWordIds = [
+      ...incorrectWordIds.slice(0, incorrectTarget),
+      ...correctWordIds,
+      ...incorrectWordIds,
+    ];
+
+    const uniqueWordIds = [...new Set(selectedWordIds)].slice(0, targetCount);
+    const selectedWords = await fillWords(
+      db,
+      await getWordsByIds(db, uniqueWordIds),
+      targetCount,
+    );
+
+    const createdSession = await createQuizSessionFromWords({
+      db,
+      userId: req.userId,
+      source: session.source,
+      sourceRefId: session.source_ref_id,
+      mode: session.mode,
+      words: selectedWords,
+      retryNo: session.retry_no + 1,
+      maxRetries: session.max_retries,
+    });
+
+    if (!createdSession) {
+      return jsonError(
+        res,
+        404,
+        "NO_WORDS_AVAILABLE",
+        "No words were available for retry.",
+      );
+    }
+
+    return res.status(201).json({
+      newSessionId: createdSession.session.id,
+      retryNo: createdSession.session.retry_no,
+      totalItems: createdSession.session.total_items,
+      session: createdSession.session,
+      firstItem: createdSession.firstItem,
+    });
+  } catch (error) {
+    return jsonError(
+      res,
+      500,
+      "RETRY_FAILED",
+      error.message || "Failed to retry quiz session.",
     );
   }
 }
