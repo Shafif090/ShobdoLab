@@ -14,11 +14,11 @@ function meaningAt(word, seed = 0) {
   return meanings[Math.abs(seed) % meanings.length];
 }
 
-function uniqueValues(values) {
+export function uniqueValues(values) {
   return [...new Set(values.filter(Boolean))];
 }
 
-function hashValue(value) {
+export function hashValue(value) {
   const text = String(value ?? "");
   let hash = 0;
   for (let index = 0; index < text.length; index += 1) {
@@ -27,7 +27,7 @@ function hashValue(value) {
   return hash;
 }
 
-function seededShuffle(values, seed) {
+export function seededShuffle(values, seed) {
   const result = [...values];
   for (let index = result.length - 1; index > 0; index -= 1) {
     const swapIndex = hashValue(`${seed}:${index}`) % (index + 1);
@@ -207,22 +207,32 @@ export async function createQuizSessionFromWords({
     };
   });
 
-  const { error: itemsError } = await db.from("quiz_items").insert(quizItems);
+  const { data: insertedItems, error: itemsError } = await db
+    .from("quiz_items")
+    .insert(quizItems)
+    .select(
+      "id, session_id, word_id, question_type, prompt_direction, prompt_text, options, accepted_answers, sequence_no",
+    )
+    .order("sequence_no", { ascending: true });
 
   if (itemsError) {
     throw itemsError;
   }
 
+  const firstInsertedItem = insertedItems?.[0] || quizItems[0];
+
   return {
     session: sessionRow,
     firstItem: {
-      wordId: quizItems[0].word_id,
-      sequenceNo: quizItems[0].sequence_no,
-      questionType: quizItems[0].question_type,
-      promptDirection: quizItems[0].prompt_direction,
-      promptText: quizItems[0].prompt_text,
-      options: quizItems[0].options,
-      acceptedAnswers: quizItems[0].accepted_answers,
+      id: firstInsertedItem.id,
+      session_id: firstInsertedItem.session_id,
+      word_id: firstInsertedItem.word_id,
+      question_type: firstInsertedItem.question_type,
+      prompt_direction: firstInsertedItem.prompt_direction,
+      prompt_text: firstInsertedItem.prompt_text,
+      options: firstInsertedItem.options,
+      accepted_answers: firstInsertedItem.accepted_answers,
+      sequence_no: firstInsertedItem.sequence_no,
     },
   };
 }

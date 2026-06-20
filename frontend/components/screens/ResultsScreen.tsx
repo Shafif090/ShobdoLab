@@ -69,11 +69,28 @@ export function ResultsScreen() {
   const duration = liveResult?.session.duration_ms
     ? `${Math.max(1, Math.round(liveResult.session.duration_ms / 1000))}s`
     : result.duration;
-  const missedWord = liveResult?.attempts.find(
-    (attempt) => !attempt.is_correct,
-  );
-  const incorrectItem = liveResult?.incorrectItems[0];
-  const lastAttempt = liveResult?.attempts.at(-1);
+  const missedItems = liveResult?.breakdown?.length
+    ? liveResult.breakdown.filter((item) => !item.isCorrect)
+    : liveResult?.incorrectItems.map((item, index) => ({
+        ...item,
+        quizItemId: item.wordId,
+        questionType: "review",
+        sequenceNo: index + 1,
+      }));
+  const fallbackMissedItems =
+    !loading && !liveResult
+      ? [
+          {
+            quizItemId: "demo",
+            word: result.missedWord,
+            questionType: "review",
+            sequenceNo: 1,
+            yourAnswer: result.yourAnswer,
+            correctAnswer: result.correctAnswer,
+          },
+        ]
+      : [];
+  const quickBreakdownItems = missedItems ?? fallbackMissedItems;
 
   async function handleRetry() {
     const token = getAccessToken();
@@ -233,43 +250,75 @@ export function ResultsScreen() {
           <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-slate-800">
             Quick Breakdown
           </h3>
-          <div
-            className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
-            style={{ borderColor: "rgba(244,124,124,0.20)" }}>
+          {loading ? (
+            <div className="flex flex-col gap-3">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
+                  style={{ borderColor: "rgba(244,124,124,0.20)" }}>
+                  <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-36" />
+                    <Skeleton className="h-4 w-40" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : quickBreakdownItems.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              {quickBreakdownItems.map((item) => (
+                <div
+                  key={item.quizItemId}
+                  className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
+                  style={{ borderColor: "rgba(244,124,124,0.20)" }}>
+                  <div
+                    className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor: "rgba(244,124,124,0.10)",
+                      color: "var(--brand-orange)",
+                    }}>
+                    <Icon name="close" className="text-sm" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex flex-wrap items-center gap-2">
+                      <p className="text-xs font-bold uppercase text-slate-500">
+                        {item.word}
+                      </p>
+                      <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-slate-500">
+                        #{item.sequenceNo} {item.questionType}
+                      </span>
+                    </div>
+                    <p
+                      className="break-words text-sm font-bold text-slate-900 line-through"
+                      style={{ textDecorationColor: "rgba(244,124,124,0.5)" }}>
+                      {item.yourAnswer || "No answer"}
+                    </p>
+                    <p className="mt-1 break-words text-sm font-bold text-emerald-600">
+                      {item.correctAnswer || "No accepted answer"}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
             <div
-              className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: "rgba(244,124,124,0.10)",
-                color: "var(--brand-orange)",
-              }}>
-              <Icon name="close" className="text-sm" />
+              className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
+              style={{ borderColor: "rgba(161,232,175,0.35)" }}>
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50 text-emerald-600">
+                <Icon name="check" className="text-sm" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-extrabold text-slate-900">
+                  No missed words
+                </p>
+                <p className="mt-1 text-sm font-semibold text-slate-500">
+                  Every answer in this session was correct.
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <p className="mb-1 text-xs font-bold uppercase text-slate-500">
-                {loading ? (
-                  <Skeleton className="h-4 w-24" />
-                ) : (
-                  (incorrectItem?.word ?? missedWord?.word_id ?? result.missedWord)
-                )}
-              </p>
-              <p
-                className="text-sm font-bold text-slate-900 line-through"
-                style={{ textDecorationColor: "rgba(244,124,124,0.5)" }}>
-                {loading ? (
-                  <Skeleton className="h-4 w-32" />
-                ) : (
-                  (incorrectItem?.yourAnswer ?? lastAttempt?.user_answer ?? result.yourAnswer)
-                )}
-              </p>
-              <p className="mt-1 text-sm font-bold text-emerald-600">
-                {loading ? (
-                  <Skeleton className="h-4 w-36" />
-                ) : (
-                  (incorrectItem?.correctAnswer ?? result.correctAnswer)
-                )}
-              </p>
-            </div>
-          </div>
+          )}
         </div>
 
         <button

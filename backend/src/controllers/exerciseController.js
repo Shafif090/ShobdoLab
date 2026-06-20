@@ -2,6 +2,7 @@ import { supabase } from "../lib/supabaseClient.js";
 import {
   createQuizSessionFromWords,
   fillWords,
+  getActiveWords,
   getWordsByIds,
   normalizeQuizMode,
 } from "./quizSessionBuilder.js";
@@ -17,9 +18,9 @@ function jsonError(res, status, code, message, details = null) {
 }
 
 const modes = {
-  mcq: { estimated: "3-5 mins", items: 20 },
-  mixed: { estimated: "4-6 mins", items: 20 },
-  typing: { estimated: "5-8 mins", items: 15 },
+  mcq: { estimated: "3-5 mins", items: 10 },
+  mixed: { estimated: "4-6 mins", items: 10 },
+  typing: { estimated: "5-8 mins", items: 10 },
 };
 
 export async function getExerciseMeta(req, res) {
@@ -94,6 +95,26 @@ async function getUserWordIds(db, userId, category, limit) {
   return (data || []).map((row) => row.word_id);
 }
 
+async function getAnyLearnedWordIds(db, userId, excludedIds, limit) {
+  const excluded = new Set(excludedIds);
+  const { data, error } = await db
+    .from("user_words")
+    .select("word_id, mistakes, last_seen_at, created_at")
+    .eq("user_id", userId)
+    .order("mistakes", { ascending: false })
+    .order("last_seen_at", { ascending: true, nullsFirst: true })
+    .limit(Math.max(limit * 3, limit));
+
+  if (error) {
+    throw error;
+  }
+
+  return (data || [])
+    .map((row) => row.word_id)
+    .filter((wordId) => !excluded.has(wordId))
+    .slice(0, limit);
+}
+
 function mergeUniqueIds(groups, targetCount) {
   const selected = [];
   const seen = new Set();
@@ -123,10 +144,24 @@ async function selectExerciseWords(db, userId, targetCount) {
     getUserWordIds(db, userId, "other", otherTarget),
   ]);
 
-  const mergedIds = mergeUniqueIds([weakIds, dueIds, otherIds], targetCount);
-  const learnedWords = await getWordsByIds(db, mergedIds);
+  let mergedIds = mergeUniqueIds([weakIds, dueIds, otherIds], targetCount);
 
-  return fillWords(db, learnedWords, targetCount);
+  if (mergedIds.length < targetCount) {
+    const fallbackLearnedIds = await getAnyLearnedWordIds(
+      db,
+      userId,
+      mergedIds,
+      targetCount - mergedIds.length,
+    );
+    mergedIds = mergeUniqueIds([mergedIds, fallbackLearnedIds], targetCount);
+  }
+
+  const learnedWords = await getWordsByIds(db, mergedIds);
+  if (learnedWords.length > 0) {
+    return fillWords(db, learnedWords, targetCount);
+  }
+
+  return getActiveWords(db, targetCount);
 }
 
 export async function startExerciseSession(req, res) {

@@ -112,6 +112,31 @@ export type ReviseSummaryResponse = {
   recentWordsCount: number;
 };
 
+export type LearnedWord = {
+  wordId: string;
+  english: string;
+  bangla: string[];
+  pos: string[];
+  root: string | null;
+  familyId: string | null;
+  status: string;
+  strength: number;
+  mistakes: number;
+  correctCount: number;
+  seenCount: number;
+  learnedAt: string;
+  lastSeenAt: string | null;
+  nextReviewAt: string | null;
+};
+
+export type LearnedWordsResponse = {
+  items: LearnedWord[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
 export type ExerciseMetaResponse = {
   modes: {
     mcq: { estimated: string; items: number };
@@ -145,6 +170,13 @@ export async function getReviseSummary(token: string) {
   return request<ReviseSummaryResponse>("/v1/revise/summary", {
     token,
   });
+}
+
+export async function getLearnedWords(token: string, page = 1, limit = 20) {
+  return request<LearnedWordsResponse>(
+    `/v1/revise/words?page=${page}&limit=${limit}`,
+    { token },
+  );
 }
 
 export async function getExerciseMeta(token: string) {
@@ -221,6 +253,24 @@ export type QuizSession = {
   duration_ms: number | null;
 };
 
+export type QuizSessionState = {
+  id: string;
+  mode: string;
+  source: string;
+  sourceRefId: string | null;
+  currentIndex: number;
+  totalItems: number;
+  correctItems: number;
+  incorrectItems: number;
+  status: string;
+  retryNo: number;
+  maxRetries: number;
+  startedAt: string;
+  endedAt: string | null;
+  durationMs: number | null;
+  progressPercent: number;
+};
+
 export type QuizItem = {
   id?: string;
   session_id?: string;
@@ -237,6 +287,17 @@ export type QuizStartResponse = {
   status: string;
   session: QuizSession;
   firstItem: QuizItem;
+};
+
+export type QuizQuestion = {
+  quizItemId: string;
+  wordId: string;
+  questionType: string;
+  promptDirection: string;
+  promptText: string;
+  options: string[] | null;
+  acceptedAnswers: string[];
+  sequenceNo: number;
 };
 
 export type ReviseStartResponse = {
@@ -265,19 +326,39 @@ export type QuizRetryResponse = {
 
 export type QuizSessionResponse = {
   session: QuizSession;
+  sessionState?: QuizSessionState;
+  question?: QuizQuestion | null;
   currentItem: QuizItem | null;
   totalItems: number;
   remainingItems: number;
 };
 
 export type QuizAnswerResponse = {
+  isCorrect?: boolean;
   correct: boolean;
+  correctAnswer?: string;
+  explanation?: string | null;
+  nextAvailable?: boolean;
+  updated?: {
+    correctItems: number;
+    incorrectItems: number;
+    currentIndex: number;
+    totalItems: number;
+    progressPercent: number;
+  };
   session: QuizSession;
+  sessionState?: QuizSessionState;
   nextItem: QuizItem | null;
+  nextQuestion?: QuizQuestion | null;
   completed: boolean;
 };
 
 export type QuizResultResponse = {
+  sessionId?: string;
+  scorePercent?: number;
+  correct?: number;
+  incorrect?: number;
+  durationSec?: number;
   session: QuizSession;
   attempts: Array<{
     id: string;
@@ -294,6 +375,8 @@ export type QuizResultResponse = {
     correctItems: number;
     incorrectItems: number;
     accuracy: number;
+    scorePercent?: number;
+    durationSec?: number;
   };
   incorrectItems: Array<{
     wordId: string;
@@ -301,6 +384,19 @@ export type QuizResultResponse = {
     yourAnswer: string | null;
     correctAnswer: string;
     correctAnswers: string[];
+  }>;
+  breakdown?: Array<{
+    quizItemId: string;
+    wordId: string;
+    word: string;
+    questionType: string;
+    sequenceNo: number;
+    promptText: string;
+    yourAnswer: string | null;
+    correctAnswer: string;
+    correctAnswers: string[];
+    isCorrect: boolean;
+    answered: boolean;
   }>;
   canRetry: boolean;
   retryAction: {
@@ -336,10 +432,18 @@ export async function getQuizSession(token: string, sessionId: string) {
   });
 }
 
+export async function getNextQuizItem(token: string, sessionId: string) {
+  return request<QuizSessionResponse>(`/v1/quiz/${sessionId}/next`, {
+    method: "POST",
+    token,
+  });
+}
+
 export async function submitQuizAnswer(
   token: string,
   sessionId: string,
   userAnswer: string,
+  quizItemId?: string,
   responseTimeMs?: number,
 ) {
   return request<QuizAnswerResponse>(`/v1/quiz/${sessionId}/answer`, {
@@ -347,6 +451,8 @@ export async function submitQuizAnswer(
     token,
     body: {
       userAnswer,
+      answer: userAnswer,
+      quizItemId,
       responseTimeMs,
     },
   });

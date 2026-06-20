@@ -1,6 +1,7 @@
 export { ExerciseScreen } from "./ExerciseScreen";
 export { HomeScreen } from "./HomeScreen";
 export { LearnScreen } from "./LearnScreen";
+export { LearnedWordsScreen } from "./LearnedWordsScreen";
 export { LoginScreen } from "./LoginScreen";
 export { ResultsScreen } from "./ResultsScreen";
 export { QuizScreen } from "./QuizScreen";

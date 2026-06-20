@@ -112,7 +112,12 @@ export default function TypingScreen() {
     setError(null);
 
     try {
-      const response = await submitQuizAnswer(token, sessionId, value);
+      const response = await submitQuizAnswer(
+        token,
+        sessionId,
+        value,
+        currentItem.id,
+      );
       setSessionTotal(response.session.total_items);
 
       if (response.completed || !response.nextItem) {

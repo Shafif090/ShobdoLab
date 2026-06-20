@@ -88,11 +88,16 @@ export function ReviseScreen() {
       value: summary?.recentWordsCount ?? stats.recentWords,
       color: "green",
       icon: "clock",
-      cta: "Quick Review",
+      cta: "View Words",
     },
   ] as const;
 
   async function startRevision(type: (typeof cards)[number]["type"]) {
+    if (type === "recent") {
+      router.push("/revise/recent");
+      return;
+    }
+
     const token = getAccessToken();
     if (!token) {
       router.push("/typing");

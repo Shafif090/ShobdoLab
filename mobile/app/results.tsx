@@ -68,8 +68,28 @@ export default function ResultsScreen() {
   const duration = liveResult?.session.duration_ms
     ? `${Math.max(1, Math.round(liveResult.session.duration_ms / 1000))}s`
     : result.duration;
-  const incorrectItem = liveResult?.incorrectItems[0];
-  const lastAttempt = liveResult?.attempts.at(-1);
+  const missedItems = liveResult?.breakdown?.length
+    ? liveResult.breakdown.filter((item) => !item.isCorrect)
+    : liveResult?.incorrectItems.map((item, index) => ({
+        ...item,
+        quizItemId: item.wordId,
+        questionType: "review",
+        sequenceNo: index + 1,
+      }));
+  const fallbackMissedItems =
+    !loading && !liveResult
+      ? [
+          {
+            quizItemId: "demo",
+            word: result.missedWord,
+            questionType: "review",
+            sequenceNo: 1,
+            yourAnswer: result.yourAnswer,
+            correctAnswer: result.correctAnswer,
+          },
+        ]
+      : [];
+  const quickBreakdownItems = missedItems ?? fallbackMissedItems;
 
   async function handleRetry() {
     const token = await getAccessToken();
@@ -258,72 +278,151 @@ export default function ResultsScreen() {
             }}>
             Quick Breakdown
           </Text>
-          <View
-            style={{
-              width: "100%",
-              borderRadius: 20,
-              borderWidth: 2,
-              borderColor: "rgba(244,124,124,0.2)",
-              backgroundColor: Colors.surface,
-              padding: 16,
-              flexDirection: "row",
-              gap: 12,
-            }}>
+          {loading ? (
+            <View style={{ gap: 10 }}>
+              {Array.from({ length: 3 }).map((_, index) => (
+                <View
+                  key={index}
+                  style={{
+                    width: "100%",
+                    borderRadius: 20,
+                    borderWidth: 2,
+                    borderColor: "rgba(244,124,124,0.2)",
+                    backgroundColor: Colors.surface,
+                    padding: 16,
+                    flexDirection: "row",
+                    gap: 12,
+                  }}>
+                  <Skeleton style={{ width: 32, height: 32, borderRadius: 16 }} />
+                  <View style={{ flex: 1 }}>
+                    <Skeleton style={{ width: 90, height: 14 }} />
+                    <Skeleton style={{ width: 120, height: 16, marginTop: 8 }} />
+                    <Skeleton style={{ width: 130, height: 16, marginTop: 8 }} />
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : quickBreakdownItems.length > 0 ? (
+            <View style={{ gap: 10 }}>
+              {quickBreakdownItems.map((item) => (
+                <View
+                  key={item.quizItemId}
+                  style={{
+                    width: "100%",
+                    borderRadius: 20,
+                    borderWidth: 2,
+                    borderColor: "rgba(244,124,124,0.2)",
+                    backgroundColor: Colors.surface,
+                    padding: 16,
+                    flexDirection: "row",
+                    gap: 12,
+                  }}>
+                  <View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: "rgba(244,124,124,0.1)",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}>
+                    <AppIcon name="close" size={14} color={Colors.orange} />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        flexWrap: "wrap",
+                        gap: 6,
+                        alignItems: "center",
+                      }}>
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: "800",
+                          color: Colors.muted,
+                          textTransform: "uppercase",
+                        }}>
+                        {item.word}
+                      </Text>
+                      <Text
+                        style={{
+                          borderRadius: 999,
+                          overflow: "hidden",
+                          backgroundColor: "#F1F5F9",
+                          color: Colors.muted,
+                          fontSize: 10,
+                          fontWeight: "800",
+                          paddingHorizontal: 8,
+                          paddingVertical: 3,
+                          textTransform: "uppercase",
+                        }}>
+                        #{item.sequenceNo} {item.questionType}
+                      </Text>
+                    </View>
+                    <Text
+                      style={{
+                        marginTop: 6,
+                        fontWeight: "800",
+                        color: Colors.text,
+                        textDecorationLine: "line-through",
+                      }}>
+                      {item.yourAnswer || "No answer"}
+                    </Text>
+                    <Text
+                      style={{
+                        marginTop: 6,
+                        fontWeight: "800",
+                        color: "#16A34A",
+                      }}>
+                      {item.correctAnswer || "No accepted answer"}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          ) : (
             <View
               style={{
-                width: 32,
-                height: 32,
-                borderRadius: 16,
-                backgroundColor: "rgba(244,124,124,0.1)",
-                alignItems: "center",
-                justifyContent: "center",
+                width: "100%",
+                borderRadius: 20,
+                borderWidth: 2,
+                borderColor: "rgba(161,232,175,0.35)",
+                backgroundColor: Colors.surface,
+                padding: 16,
+                flexDirection: "row",
+                gap: 12,
               }}>
-              <AppIcon name="close" size={14} color={Colors.orange} />
+              <View
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 16,
+                  backgroundColor: "#ECFDF5",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}>
+                <AppIcon name="check" size={14} color="#16A34A" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text
+                  style={{
+                    fontWeight: "800",
+                    color: Colors.text,
+                  }}>
+                  No missed words
+                </Text>
+                <Text
+                  style={{
+                    marginTop: 6,
+                    fontWeight: "600",
+                    color: Colors.muted,
+                  }}>
+                  Every answer in this session was correct.
+                </Text>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              {loading ? (
-                <>
-                  <Skeleton style={{ width: 90, height: 14 }} />
-                  <Skeleton style={{ width: 120, height: 16, marginTop: 8 }} />
-                  <Skeleton style={{ width: 130, height: 16, marginTop: 8 }} />
-                </>
-              ) : (
-                <>
-                  <Text
-                    style={{
-                      fontSize: 12,
-                      fontWeight: "800",
-                      color: Colors.muted,
-                      textTransform: "uppercase",
-                    }}>
-                    {incorrectItem?.word ??
-                      liveResult?.attempts.find((attempt) => !attempt.is_correct)
-                        ?.word_id ??
-                      result.missedWord}
-                  </Text>
-                  <Text
-                    style={{
-                      marginTop: 6,
-                      fontWeight: "800",
-                      color: Colors.text,
-                      textDecorationLine: "line-through",
-                    }}>
-                    {incorrectItem?.yourAnswer ??
-                      lastAttempt?.user_answer ??
-                      result.yourAnswer}
-                  </Text>
-                  <Text
-                    style={{
-                      marginTop: 6,
-                      fontWeight: "800",
-                      color: "#16A34A",
-                    }}>
-                    {incorrectItem?.correctAnswer ?? result.correctAnswer}
-                  </Text>
-                </>
-              )}
-            </View>
-          </View>
+          )}
         </View>
 
         <Pressable

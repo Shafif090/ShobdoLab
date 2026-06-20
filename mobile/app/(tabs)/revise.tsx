@@ -86,11 +86,16 @@ export default function ReviseTab() {
       count: summary?.recentWordsCount ?? stats.recentWords,
       color: Colors.green,
       icon: "clock",
-      action: "Quick Review",
+      action: "View Words",
     },
   ] as const;
 
   async function startRevision(type: (typeof cards)[number]["type"]) {
+    if (type === "recent") {
+      router.push("/learned-words");
+      return;
+    }
+
     const token = await getAccessToken();
     if (!token) {
       router.push("/typing");

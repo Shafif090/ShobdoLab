@@ -92,6 +92,7 @@ html, body {
         <Stack.Screen name="quiz" />
         <Stack.Screen name="typing" />
         <Stack.Screen name="results" />
+        <Stack.Screen name="learned-words" />
       </Stack>
       <StatusBar style="dark" />
     </>

@@ -1,4 +1,8 @@
-import { supabase } from "../lib/supabaseClient.js";
+import {
+  authSupabase,
+  getSupabaseConfigStatus,
+  supabase,
+} from "../lib/supabaseClient.js";
 
 function badRequest(res, code, message, details = null) {
   return res.status(400).json({
@@ -6,6 +10,28 @@ function badRequest(res, code, message, details = null) {
       code,
       message,
       details,
+    },
+  });
+}
+
+function isSupabaseNetworkError(error) {
+  if (!error) return false;
+
+  const message = String(error.message || "").toLowerCase();
+  return (
+    error.name === "AuthRetryableFetchError" ||
+    message.includes("fetch failed") ||
+    message.includes("failed to fetch") ||
+    message.includes("network")
+  );
+}
+
+function authServiceUnavailable(res, message = "Authentication service is unavailable.") {
+  return res.status(503).json({
+    error: {
+      code: "AUTH_SERVICE_UNAVAILABLE",
+      message,
+      details: getSupabaseConfigStatus(),
     },
   });
 }
@@ -29,7 +55,7 @@ export async function signup(req, res) {
     );
   }
 
-  const { data, error } = await supabase.auth.signUp({
+  const { data, error } = await authSupabase.auth.signUp({
     email,
     password,
     options: {
@@ -40,6 +66,13 @@ export async function signup(req, res) {
   });
 
   if (error) {
+    if (isSupabaseNetworkError(error)) {
+      return authServiceUnavailable(
+        res,
+        "Unable to reach Supabase Auth. Check the backend network connection and Supabase environment variables.",
+      );
+    }
+
     return res.status(400).json({
       error: {
         code: "SIGNUP_FAILED",
@@ -82,10 +115,17 @@ export async function login(req, res) {
     );
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await authSupabase.auth.signInWithPassword({
     email,
     password,
   });
+
+  if (isSupabaseNetworkError(error)) {
+    return authServiceUnavailable(
+      res,
+      "Unable to reach Supabase Auth. Check the backend network connection and Supabase environment variables.",
+    );
+  }
 
   if (error || !data?.session || !data?.user) {
     return res.status(401).json({

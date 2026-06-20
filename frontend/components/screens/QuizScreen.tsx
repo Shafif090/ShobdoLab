@@ -156,7 +156,12 @@ export function QuizScreen() {
     setError(null);
 
     try {
-      const response = await submitQuizAnswer(token, sessionId, selectedAnswer);
+      const response = await submitQuizAnswer(
+        token,
+        sessionId,
+        selectedAnswer,
+        currentItem.id,
+      );
       setSessionTotal(response.session.total_items);
 
       if (response.completed || !response.nextItem) {

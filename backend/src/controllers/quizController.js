@@ -4,6 +4,19 @@ import {
   fillWords,
   getWordsByIds,
 } from "./quizSessionBuilder.js";
+import {
+  applyConservativeProgressForWords,
+  applyUserWordProgress,
+  getUserWordProgressRow,
+  recordDailyProgress,
+} from "./progressEngine.js";
+import {
+  answerPayload,
+  formatAnswerList,
+  getCorrectAnswer,
+  progressPercent,
+  quizSessionPayload,
+} from "./quizResponse.js";
 
 function jsonError(res, status, code, message, details = null) {
   return res.status(status).json({
@@ -17,11 +30,11 @@ function jsonError(res, status, code, message, details = null) {
 
 function normalizeAnswer(value) {
   return String(value ?? "")
-    .normalize("NFKC")
+    .normalize("NFC")
     .trim()
     .replace(/[\u200B-\u200D\uFEFF]/g, "")
     .replace(/\s+/g, " ")
-    .replace(/[^\p{L}\p{N}]+/gu, "")
+    .replace(/[\s\p{P}\p{S}]+$/gu, "")
     .toLowerCase();
 }
 
@@ -85,15 +98,33 @@ async function getSessionAttempts(db, sessionId) {
   return data || [];
 }
 
-function formatAnswerList(value) {
-  const values = Array.isArray(value) ? value.flat(Infinity) : [value];
-  return values.filter(Boolean).join(", ");
-}
-
 async function getCurrentQuizItem(db, session) {
   const items = await getSessionItems(db, session.id);
   const currentItem = items[session.current_index] || null;
   return { items, currentItem };
+}
+
+async function maybeCompleteLearnSet(db, userId, session) {
+  if (session.source !== "learn" || !session.source_ref_id) {
+    return;
+  }
+
+  const scorePercent =
+    session.total_items > 0
+      ? Math.round((session.correct_items / session.total_items) * 100)
+      : 0;
+  const shouldComplete =
+    scorePercent >= 80 || session.retry_no >= session.max_retries;
+
+  if (!shouldComplete) {
+    return;
+  }
+
+  await db
+    .from("learning_sets")
+    .update({ state: "completed" })
+    .eq("id", session.source_ref_id)
+    .eq("user_id", userId);
 }
 
 export async function getQuizSession(req, res) {
@@ -112,12 +143,7 @@ export async function getQuizSession(req, res) {
 
     const { items, currentItem } = await getCurrentQuizItem(db, session);
 
-    return res.json({
-      session,
-      currentItem,
-      totalItems: items.length,
-      remainingItems: Math.max(0, items.length - session.current_index),
-    });
+    return res.json(quizSessionPayload(session, currentItem, items));
   } catch (error) {
     return jsonError(
       res,
@@ -132,7 +158,12 @@ export async function submitQuizAnswer(req, res) {
   try {
     const db = req.supabase || supabase;
     const { sessionId } = req.params;
-    const { userAnswer, responseTimeMs } = req.body || {};
+    const {
+      userAnswer,
+      answer = userAnswer,
+      quizItemId,
+      responseTimeMs,
+    } = req.body || {};
 
     const session = await getSession(db, req.userId, sessionId);
     if (!session) {
@@ -165,6 +196,15 @@ export async function submitQuizAnswer(req, res) {
       );
     }
 
+    if (quizItemId && quizItemId !== currentItem.id) {
+      return jsonError(
+        res,
+        409,
+        "QUIZ_ITEM_OUT_OF_SYNC",
+        "The submitted quiz item does not match the current session item.",
+      );
+    }
+
     const { data: existingAttempt, error: attemptLookupError } = await db
       .from("quiz_attempts")
       .select("id")
@@ -185,72 +225,127 @@ export async function submitQuizAnswer(req, res) {
       );
     }
 
-    const wasCorrect = isCorrectAnswer(
-      userAnswer,
-      currentItem.accepted_answers,
-    );
+    const wasCorrect = isCorrectAnswer(answer, currentItem.accepted_answers);
+    const now = new Date();
 
-    const { data: progressRows, error: progressError } = await db.rpc(
-      "record_quiz_answer",
-      {
-        p_user_id: req.userId,
-        p_session_id: session.id,
-        p_quiz_item_id: currentItem.id,
-        p_word_id: currentItem.word_id,
-        p_user_answer: userAnswer ?? null,
-        p_is_correct: wasCorrect,
-        p_response_time_ms: responseTimeMs ?? null,
-      },
-    );
+    const { error: attemptError } = await db.from("quiz_attempts").insert({
+      session_id: session.id,
+      quiz_item_id: currentItem.id,
+      word_id: currentItem.word_id,
+      user_answer: answer ?? null,
+      is_correct: wasCorrect,
+      response_time_ms: responseTimeMs ?? null,
+      submitted_at: now.toISOString(),
+    });
 
-    if (progressError) {
-      const errorMessage =
-        progressError.message || "Failed to submit quiz answer.";
-      const status = errorMessage.includes("already been answered")
-        ? 409
-        : errorMessage.includes("not found")
-          ? 404
-          : errorMessage.includes("not active")
-            ? 400
-            : 500;
-
-      return jsonError(res, status, "ANSWER_FAILED", errorMessage);
+    if (attemptError) {
+      const isDuplicate = attemptError.code === "23505";
+      return jsonError(
+        res,
+        isDuplicate ? 409 : 500,
+        isDuplicate ? "ALREADY_ANSWERED" : "ANSWER_FAILED",
+        isDuplicate
+          ? "This quiz item has already been answered."
+          : attemptError.message || "Failed to record the quiz attempt.",
+      );
     }
 
-    const updatedSession = progressRows?.[0]
-      ? {
-          id: progressRows[0].session_id,
-          user_id: req.userId,
-          source: session.source,
-          source_ref_id: session.source_ref_id,
-          mode: session.mode,
-          total_items: progressRows[0].total_items,
-          current_index: progressRows[0].current_index,
-          correct_items: progressRows[0].correct_items,
-          incorrect_items: progressRows[0].incorrect_items,
-          status: progressRows[0].status,
-          retry_no: session.retry_no,
-          max_retries: session.max_retries,
-          started_at: progressRows[0].started_at,
-          ended_at: progressRows[0].ended_at,
-          duration_ms: progressRows[0].duration_ms,
-        }
-      : await getSession(db, req.userId, session.id);
+    const existingUserWord = await getUserWordProgressRow(
+      db,
+      req.userId,
+      currentItem.word_id,
+    );
+    await applyUserWordProgress({
+      db,
+      userId: req.userId,
+      wordId: currentItem.word_id,
+      existingRow: existingUserWord,
+      isCorrect: wasCorrect,
+      now,
+    });
+    await recordDailyProgress({
+      db,
+      userId: req.userId,
+      source: session.source,
+      isCorrect: wasCorrect,
+      now,
+    });
+
+    const nextCurrentIndex = session.current_index + 1;
+    const completed = nextCurrentIndex >= session.total_items;
+    const endedAt = completed ? now.toISOString() : session.ended_at;
+    const durationMs = completed
+      ? Math.max(0, now.getTime() - new Date(session.started_at).getTime())
+      : session.duration_ms;
+
+    const { data: updatedSession, error: sessionUpdateError } = await db
+      .from("quiz_sessions")
+      .update({
+        current_index: nextCurrentIndex,
+        correct_items: session.correct_items + (wasCorrect ? 1 : 0),
+        incorrect_items: session.incorrect_items + (wasCorrect ? 0 : 1),
+        status: completed ? "completed" : "active",
+        ended_at: endedAt,
+        duration_ms: durationMs,
+      })
+      .eq("id", session.id)
+      .eq("user_id", req.userId)
+      .select(
+        "id, user_id, source, source_ref_id, mode, total_items, current_index, correct_items, incorrect_items, status, retry_no, max_retries, started_at, ended_at, duration_ms",
+      )
+      .single();
+
+    if (sessionUpdateError) {
+      throw sessionUpdateError;
+    }
+
+    if (completed) {
+      await maybeCompleteLearnSet(db, req.userId, updatedSession);
+    }
 
     const nextItem = items[updatedSession.current_index] || null;
 
-    return res.json({
-      correct: wasCorrect,
-      session: updatedSession,
-      nextItem,
-      completed: updatedSession.status === "completed",
-    });
+    return res.json(
+      answerPayload({
+        isCorrect: wasCorrect,
+        currentItem,
+        updatedSession,
+        nextItem,
+      }),
+    );
   } catch (error) {
     return jsonError(
       res,
       500,
       "ANSWER_FAILED",
       error.message || "Failed to submit quiz answer.",
+    );
+  }
+}
+
+export async function getNextQuizItem(req, res) {
+  try {
+    const db = req.supabase || supabase;
+    const session = await getSession(db, req.userId, req.params.sessionId);
+
+    if (!session) {
+      return jsonError(
+        res,
+        404,
+        "SESSION_NOT_FOUND",
+        "Quiz session not found for this user.",
+      );
+    }
+
+    const { items, currentItem } = await getCurrentQuizItem(db, session);
+
+    return res.json(quizSessionPayload(session, currentItem, items));
+  } catch (error) {
+    return jsonError(
+      res,
+      500,
+      "NEXT_ITEM_FAILED",
+      error.message || "Failed to load the next quiz item.",
     );
   }
 }
@@ -270,13 +365,7 @@ export async function finishQuizSession(req, res) {
     }
 
     if (session.status === "completed") {
-      if (session.source === "learn" && session.source_ref_id) {
-        await db
-          .from("learning_sets")
-          .update({ state: "completed" })
-          .eq("id", session.source_ref_id)
-          .eq("user_id", req.userId);
-      }
+      await maybeCompleteLearnSet(db, req.userId, session);
 
       return res.json({ session });
     }
@@ -304,13 +393,7 @@ export async function finishQuizSession(req, res) {
       throw error;
     }
 
-    if (session.source === "learn" && session.source_ref_id) {
-      await db
-        .from("learning_sets")
-        .update({ state: "completed" })
-        .eq("id", session.source_ref_id)
-        .eq("user_id", req.userId);
-    }
+    await maybeCompleteLearnSet(db, req.userId, data);
 
     return res.json({ session: data });
   } catch (error) {
@@ -340,11 +423,15 @@ export async function getQuizResult(req, res) {
     const attempts = await getSessionAttempts(db, session.id);
     const items = await getSessionItems(db, session.id);
     const itemById = new Map(items.map((item) => [item.id, item]));
+    const attemptByItemId = new Map(
+      attempts.map((attempt) => [attempt.quiz_item_id, attempt]),
+    );
     const wordIds = [...new Set(items.map((item) => item.word_id))];
     const words = await getWordsByIds(db, wordIds);
     const wordById = new Map(words.map((word) => [word.id, word]));
     const accuracy =
       session.total_items > 0 ? session.correct_items / session.total_items : 0;
+    const scorePercent = Math.round(accuracy * 100);
     const incorrectItems = attempts
       .filter((attempt) => !attempt.is_correct)
       .map((attempt) => {
@@ -361,8 +448,41 @@ export async function getQuizResult(req, res) {
             : [item?.accepted_answers].filter(Boolean),
         };
       });
+    const breakdown = items.map((item) => {
+      const attempt = attemptByItemId.get(item.id);
+      const word = wordById.get(item.word_id);
+
+      return {
+        quizItemId: item.id,
+        wordId: item.word_id,
+        word: word?.english ?? item.prompt_text ?? String(item.word_id),
+        questionType: item.question_type,
+        sequenceNo: item.sequence_no,
+        promptText: item.prompt_text,
+        yourAnswer: attempt?.user_answer ?? null,
+        correctAnswer: formatAnswerList(item.accepted_answers),
+        correctAnswers: Array.isArray(item.accepted_answers)
+          ? item.accepted_answers.flat(Infinity)
+          : [item.accepted_answers].filter(Boolean),
+        isCorrect: Boolean(attempt?.is_correct),
+        answered: Boolean(attempt),
+      };
+    });
+
+    const durationSec = session.duration_ms
+      ? Math.round(session.duration_ms / 1000)
+      : 0;
+    const canRetry =
+      session.status === "completed" &&
+      session.retry_no < session.max_retries &&
+      (session.source !== "learn" || scorePercent < 80);
 
     return res.json({
+      sessionId: session.id,
+      scorePercent,
+      correct: session.correct_items,
+      incorrect: session.incorrect_items,
+      durationSec,
       session,
       attempts,
       summary: {
@@ -370,9 +490,12 @@ export async function getQuizResult(req, res) {
         correctItems: session.correct_items,
         incorrectItems: session.incorrect_items,
         accuracy,
+        scorePercent,
+        durationSec,
       },
       incorrectItems,
-      canRetry: session.retry_no < session.max_retries,
+      breakdown,
+      canRetry,
       retryAction: {
         endpoint: `/v1/quiz/${session.id}/retry`,
         maxRetries: session.max_retries,
@@ -404,6 +527,22 @@ export async function retryQuizSession(req, res) {
     }
 
     if (session.retry_no >= session.max_retries) {
+      if (session.source === "learn" && session.source_ref_id) {
+        const attempts = await getSessionAttempts(db, session.id);
+        await applyConservativeProgressForWords({
+          db,
+          userId: req.userId,
+          wordIds: attempts
+            .filter((attempt) => !attempt.is_correct)
+            .map((attempt) => attempt.word_id),
+        });
+        await db
+          .from("learning_sets")
+          .update({ state: "completed" })
+          .eq("id", session.source_ref_id)
+          .eq("user_id", req.userId);
+      }
+
       return jsonError(
         res,
         409,
@@ -422,6 +561,23 @@ export async function retryQuizSession(req, res) {
       );
     }
 
+    if (session.source === "learn") {
+      const scorePercent =
+        session.total_items > 0
+          ? Math.round((session.correct_items / session.total_items) * 100)
+          : 0;
+
+      if (scorePercent >= 80) {
+        await maybeCompleteLearnSet(db, req.userId, session);
+        return jsonError(
+          res,
+          409,
+          "RETRY_NOT_NEEDED",
+          "This learning set already passed the retry threshold.",
+        );
+      }
+    }
+
     const incorrectWordIds = attempts
       .filter((attempt) => !attempt.is_correct)
       .map((attempt) => attempt.word_id);
@@ -431,10 +587,12 @@ export async function retryQuizSession(req, res) {
 
     const targetCount = session.total_items;
     const incorrectTarget = Math.ceil(targetCount * 0.7);
+    const correctTarget = targetCount - incorrectTarget;
     const selectedWordIds = [
       ...incorrectWordIds.slice(0, incorrectTarget),
-      ...correctWordIds,
+      ...correctWordIds.slice(0, correctTarget),
       ...incorrectWordIds,
+      ...correctWordIds,
     ];
 
     const uniqueWordIds = [...new Set(selectedWordIds)].slice(0, targetCount);
