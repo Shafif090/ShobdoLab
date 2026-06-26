@@ -92,7 +92,11 @@ html, body {
         <Stack.Screen name="quiz" />
         <Stack.Screen name="typing" />
         <Stack.Screen name="results" />
+        <Stack.Screen name="achievements" />
         <Stack.Screen name="learned-words" />
+        <Stack.Screen name="exercise-history" />
+        <Stack.Screen name="revise-words/[type]" />
+        <Stack.Screen name="word/[wordId]" />
       </Stack>
       <StatusBar style="dark" />
     </>

@@ -6,7 +6,7 @@ import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, type IconName } from "./AppIcon";
 import { styles } from "./styles";
 
-export type TabKey = "home" | "learn" | "revise" | "exercise";
+export type TabKey = "home" | "learn" | "revise" | "exercise" | "dictionary";
 
 export function MobileTabs({ active }: { active: TabKey }) {
   const items: { key: TabKey; label: string; href: Href; icon: IconName }[] = [
@@ -18,6 +18,12 @@ export function MobileTabs({ active }: { active: TabKey }) {
       label: "Exercise",
       href: "/(tabs)/exercise",
       icon: "exercise",
+    },
+    {
+      key: "dictionary",
+      label: "Dict",
+      href: "/(tabs)/dictionary",
+      icon: "search",
     },
   ];
 

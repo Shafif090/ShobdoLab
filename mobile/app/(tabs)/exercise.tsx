@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
-import { AppIcon, IconButton, Skeleton, TabScreen } from "@/components";
+import { AppIcon, Skeleton, TabScreen } from "@/components";
 import { stats } from "@/constants/data";
 import {
   ApiError,
@@ -81,7 +81,7 @@ export default function ExerciseTab() {
         setLiveSet(setResponse.set);
         setMeta(metaResponse);
         setSyncMessage(
-          `Live set #${setResponse.set.set_index} • ${setResponse.set.total_words} words ready`,
+          `Live set #${setResponse.set.set_index} with ${setResponse.set.total_words} words ready`,
         );
       } catch (exception) {
         if (!active) return;
@@ -132,10 +132,7 @@ export default function ExerciseTab() {
   }
 
   return (
-    <TabScreen
-      title="Exercise"
-      active="exercise"
-      right={<IconButton icon="ellipsis" />}>
+    <TabScreen title="Exercise" active="exercise">
       <View style={{ gap: 24, alignItems: "center" }}>
         <View style={{ alignItems: "center", gap: 6, paddingVertical: 18 }}>
           <Text style={{ fontSize: 32, fontWeight: "800", color: Colors.text }}>
@@ -209,11 +206,6 @@ export default function ExerciseTab() {
               <Text style={{ color: Colors.muted, fontWeight: "600" }}>
                 {syncMessage}
               </Text>
-              {liveSet ? (
-                <Text style={{ color: Colors.text, fontWeight: "800" }}>
-                  Loaded set {liveSet.set_index} with {liveSet.total_words} words.
-                </Text>
-              ) : null}
             </>
           )}
         </View>
@@ -349,7 +341,9 @@ export default function ExerciseTab() {
               </Text>
             </Text>
           )}
-          <Text style={{ color: Colors.blue, fontWeight: "700" }}>
+          <Text
+            onPress={() => router.push("/exercise-history")}
+            style={{ color: Colors.blue, fontWeight: "700" }}>
             View History
           </Text>
         </View>

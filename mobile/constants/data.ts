@@ -1,4 +1,5 @@
 export type LearnWord = {
+  wordId?: string | number;
   english: string;
   bangla: string[];
   pos: string[];

@@ -84,9 +84,9 @@ export const styles = StyleSheet.create({
     borderTopColor: "#F1F5F9",
   },
   tabItem: {
+    flex: 1,
     alignItems: "center",
     gap: 4,
-    minWidth: 56,
   },
   tabIcon: {
     width: 40,

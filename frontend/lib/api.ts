@@ -1,3 +1,5 @@
+import { expireAuthSession } from "./session";
+
 const API_BASE_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5500"
 ).replace(/\/$/, "");
@@ -48,6 +50,13 @@ async function request<T>(
   });
 
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith("/v1/auth")) {
+      expireAuthSession();
+      if (typeof window !== "undefined") {
+        window.location.assign("/login");
+      }
+    }
+
     const fallback = {
       error: {
         code: "REQUEST_FAILED",
@@ -76,6 +85,7 @@ export type AuthSession = {
   accessToken: string;
   refreshToken: string | null;
   expiresIn: number | null;
+  expiresAt?: number | null;
   user: {
     id: string;
     email: string | null;
@@ -92,6 +102,17 @@ export type SignupInput = LoginInput & {
   displayName?: string;
 };
 
+export type GoogleAuthUrlResponse = {
+  url: string;
+};
+
+export type OAuthSessionInput = {
+  accessToken: string;
+  refreshToken?: string | null;
+  expiresIn?: number | null;
+  expiresAt?: number | null;
+};
+
 export type HomeSummaryResponse = {
   streakDays: number;
   wordsLearnedTotal: number;
@@ -100,11 +121,21 @@ export type HomeSummaryResponse = {
     revised: number;
     exercise: number;
   };
+  dueTomorrowCount: number;
   unreadNotifications: number;
   latestAchievement: {
     title: string | null;
     awardedAt: string;
   } | null;
+  achievements: Array<{
+    code: string;
+    title: string;
+    description: string;
+    earned: boolean;
+    awardedAt: string | null;
+    progress: number;
+    target: number;
+  }>;
 };
 
 export type ReviseSummaryResponse = {
@@ -132,11 +163,22 @@ export type LearnedWord = {
 
 export type LearnedWordsResponse = {
   items: LearnedWord[];
+  type?: "due" | "weak" | "recent";
   page: number;
   limit: number;
   total: number;
   hasMore: boolean;
 };
+
+export type LearnedWordsSort =
+  | "newest"
+  | "oldest"
+  | "az"
+  | "za"
+  | "strength_high"
+  | "strength_low"
+  | "mistakes_high"
+  | "last_seen";
 
 export type ExerciseMetaResponse = {
   modes: {
@@ -145,6 +187,105 @@ export type ExerciseMetaResponse = {
     typing: { estimated: string; items: number };
   };
   lastSessionAccuracy: number | null;
+};
+
+export type ExerciseHistoryItem = {
+  sessionId: string;
+  mode: string;
+  totalItems: number;
+  correctItems: number;
+  incorrectItems: number;
+  scorePercent: number;
+  accuracy: number;
+  durationSec: number;
+  startedAt: string;
+  endedAt: string | null;
+  retryNo: number;
+  missedWords: Array<{
+    wordId: string;
+    word: string;
+  }>;
+};
+
+export type ExerciseHistoryResponse = {
+  items: ExerciseHistoryItem[];
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
+export type WordDetailResponse = {
+  word: {
+    wordId: string;
+    english: string;
+    bangla: string[];
+    pos: string[];
+    root: string | null;
+    familyId: string | null;
+    isActive: boolean;
+    createdAt: string;
+  };
+  progress: {
+    status: string;
+    strength: number;
+    mistakes: number;
+    correctCount: number;
+    seenCount: number;
+    learnedAt: string;
+    lastSeenAt: string | null;
+    nextReviewAt: string | null;
+    updatedAt: string;
+  } | null;
+  stats: {
+    totalAttempts: number;
+    correctAttempts: number;
+    incorrectAttempts: number;
+    accuracy: number | null;
+    lastAttemptAt: string | null;
+  };
+  recentAttempts: Array<{
+    id: string;
+    sessionId: string;
+    quizItemId: string;
+    source: string | null;
+    mode: string | null;
+    questionType: string | null;
+    promptText: string;
+    sequenceNo: number | null;
+    yourAnswer: string | null;
+    correctAnswer: string;
+    correctAnswers: string[];
+    isCorrect: boolean;
+    responseTimeMs: number | null;
+    submittedAt: string;
+  }>;
+};
+
+export type DictionaryWord = {
+  wordId: string;
+  english: string;
+  bangla: string[];
+  pos: string[];
+  root: string | null;
+  familyId: string | null;
+  isActive: boolean;
+  learned: boolean;
+  progress: WordDetailResponse["progress"];
+};
+
+export type WordSearchResponse = {
+  items: DictionaryWord[];
+  query: string;
+  page: number;
+  limit: number;
+  total: number;
+  hasMore: boolean;
+};
+
+export type AddWordResponse = {
+  item: DictionaryWord;
+  added: boolean;
 };
 
 export type LearningSetItem = {
@@ -361,6 +502,20 @@ export async function signup(input: SignupInput) {
   });
 }
 
+export async function getGoogleAuthUrl(redirectTo: string) {
+  return request<GoogleAuthUrlResponse>("/v1/auth/google/url", {
+    method: "POST",
+    body: { redirectTo },
+  });
+}
+
+export async function createOAuthSession(input: OAuthSessionInput) {
+  return request<AuthSession>("/v1/auth/oauth/session", {
+    method: "POST",
+    body: input,
+  });
+}
+
 export async function getHomeSummary(token: string) {
   return request<HomeSummaryResponse>("/v1/home/summary", { token });
 }
@@ -369,15 +524,67 @@ export async function getReviseSummary(token: string) {
   return request<ReviseSummaryResponse>("/v1/revise/summary", { token });
 }
 
-export async function getLearnedWords(token: string, page = 1, limit = 20) {
-  return request<LearnedWordsResponse>(
-    `/v1/revise/words?page=${page}&limit=${limit}`,
-    { token },
-  );
+export async function getLearnedWords(
+  token: string,
+  page = 1,
+  limit = 20,
+  type: "due" | "weak" | "recent" = "recent",
+) {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+    type,
+  });
+
+  return request<LearnedWordsResponse>(`/v1/revise/words?${params.toString()}`, {
+    token,
+  });
 }
 
 export async function getExerciseMeta(token: string) {
   return request<ExerciseMetaResponse>("/v1/exercise/meta", { token });
+}
+
+export async function getExerciseHistory(token: string, page = 1, limit = 10) {
+  return request<ExerciseHistoryResponse>(
+    `/v1/exercise/history?page=${page}&limit=${limit}`,
+    { token },
+  );
+}
+
+export async function getWordDetail(token: string, wordId: string | number) {
+  return request<WordDetailResponse>(`/v1/words/${wordId}`, { token });
+}
+
+export async function searchWords(token: string, query = "", page = 1, limit = 20) {
+  const params = new URLSearchParams({
+    q: query,
+    page: String(page),
+    limit: String(limit),
+  });
+
+  return request<WordSearchResponse>(`/v1/words/search?${params.toString()}`, {
+    token,
+  });
+}
+
+export async function addWord(token: string, wordId: string | number) {
+  return request<AddWordResponse>(`/v1/words/${wordId}/add`, {
+    method: "POST",
+    token,
+  });
+}
+
+export async function practiceWord(
+  token: string,
+  wordId: string | number,
+  mode = "mixed",
+) {
+  return request<ExerciseStartResponse>(`/v1/words/${wordId}/practice`, {
+    method: "POST",
+    token,
+    body: { mode },
+  });
 }
 
 export async function startReviseSession(

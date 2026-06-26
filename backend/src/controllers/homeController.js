@@ -1,4 +1,5 @@
 import { supabase } from "../lib/supabaseClient.js";
+import { syncAchievementsForUser } from "./achievementEngine.js";
 
 function jsonError(res, status, code, message, details = null) {
   return res.status(status).json({
@@ -10,8 +11,23 @@ function jsonError(res, status, code, message, details = null) {
   });
 }
 
-function todayDateString() {
-  return new Date().toISOString().slice(0, 10);
+function addDays(date, days) {
+  return new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+}
+
+function dateInTimezone(date, timezone = "UTC") {
+  try {
+    const parts = new Intl.DateTimeFormat("en", {
+      timeZone: timezone,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).formatToParts(date);
+    const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+  } catch {
+    return date.toISOString().slice(0, 10);
+  }
 }
 
 async function getExactCount(query) {
@@ -26,11 +42,11 @@ async function getExactCount(query) {
 export async function getHomeSummary(req, res) {
   try {
     const db = req.supabase || supabase;
-    const today = todayDateString();
+    const now = new Date();
 
     const { data: userRow, error: userError } = await db
       .from("users")
-      .select("streak_days")
+      .select("streak_days, timezone")
       .eq("id", req.userId)
       .maybeSingle();
 
@@ -45,6 +61,9 @@ export async function getHomeSummary(req, res) {
         .eq("user_id", req.userId),
     );
 
+    const timezone = userRow?.timezone || "UTC";
+    const today = dateInTimezone(now, timezone);
+
     const { data: dailyStats, error: dailyStatsError } = await db
       .from("daily_user_stats")
       .select("learned_count, revised_count, exercise_count")
@@ -56,6 +75,17 @@ export async function getHomeSummary(req, res) {
       throw dailyStatsError;
     }
 
+    const tomorrow = dateInTimezone(addDays(now, 1), timezone);
+    const dayAfterTomorrow = dateInTimezone(addDays(now, 2), timezone);
+    const dueTomorrowCount = await getExactCount(
+      db
+        .from("user_words")
+        .select("word_id", { count: "exact", head: true })
+        .eq("user_id", req.userId)
+        .gte("next_review_at", `${tomorrow}T00:00:00.000Z`)
+        .lt("next_review_at", `${dayAfterTomorrow}T00:00:00.000Z`),
+    );
+
     const unreadNotifications = await getExactCount(
       db
         .from("notifications")
@@ -64,24 +94,7 @@ export async function getHomeSummary(req, res) {
         .eq("is_read", false),
     );
 
-    let latestAchievement = null;
-    const { data: achievementRows } = await db
-      .from("user_achievements")
-      .select("awarded_at, achievements(title)")
-      .eq("user_id", req.userId)
-      .order("awarded_at", { ascending: false })
-      .limit(1);
-
-    if (achievementRows?.[0]) {
-      const achievement = Array.isArray(achievementRows[0].achievements)
-        ? achievementRows[0].achievements[0]
-        : achievementRows[0].achievements;
-
-      latestAchievement = {
-        title: achievement?.title ?? null,
-        awardedAt: achievementRows[0].awarded_at,
-      };
-    }
+    const achievementSnapshot = await syncAchievementsForUser(db, req.userId);
 
     return res.json({
       streakDays: userRow?.streak_days ?? 0,
@@ -91,8 +104,10 @@ export async function getHomeSummary(req, res) {
         revised: dailyStats?.revised_count ?? 0,
         exercise: dailyStats?.exercise_count ?? 0,
       },
+      dueTomorrowCount,
       unreadNotifications,
-      latestAchievement,
+      latestAchievement: achievementSnapshot.latestAchievement,
+      achievements: achievementSnapshot.achievements,
     });
   } catch (error) {
     return jsonError(

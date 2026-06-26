@@ -25,13 +25,13 @@ export function ActionCard({
   return (
     <Link
       href={href}
-      className={`group block ${offset ? "pl-8" : compactRight ? "pr-8" : ""}`}>
+      className={`group block ${offset ? "pl-4 sm:pl-8" : compactRight ? "pr-4 sm:pr-8" : ""}`}>
       <div
-        className={`border-2 border-black p-6 shadow-brutal transition group-hover:-translate-y-1 ${classes}`}
-        style={{ borderRadius: 24 }}>
-        <div className="flex items-start justify-between">
-          <h3 className="text-2xl font-bold">{title}</h3>
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+        className={`border-2 border-black p-6 shadow-brutal transition duration-200 group-hover:-translate-y-1 group-hover:shadow-[0_6px_0_0_#000] ${classes}`}
+        style={{ borderRadius: 20 }}>
+        <div className="flex items-start justify-between gap-4">
+          <h3 className="text-2xl font-extrabold">{title}</h3>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20 transition group-hover:translate-x-0.5">
             <Icon name="arrowRight" className="text-sm" />
           </div>
         </div>

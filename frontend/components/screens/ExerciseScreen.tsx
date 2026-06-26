@@ -51,11 +51,6 @@ export function ExerciseScreen() {
   const [mode, setMode] = useState<keyof typeof modes>("mixed");
   const current = modes[mode];
   const [meta, setMeta] = useState<ExerciseMetaResponse | null>(null);
-  const [liveSet, setLiveSet] = useState<{
-    id: string;
-    set_index: number;
-    total_words: number;
-  } | null>(null);
   const [syncMessage, setSyncMessage] = useState(
     "Sign in to sync your current learning set.",
   );
@@ -78,14 +73,9 @@ export function ExerciseScreen() {
         ]);
         if (!active) return;
 
-        setLiveSet({
-          id: setResponse.set.id,
-          set_index: setResponse.set.set_index,
-          total_words: setResponse.set.total_words,
-        });
         setMeta(metaResponse);
         setSyncMessage(
-          `Live set #${setResponse.set.set_index} • ${setResponse.set.total_words} words ready`,
+          `Live set #${setResponse.set.set_index} with ${setResponse.set.total_words} words ready`,
         );
       } catch (exception) {
         if (!active) return;
@@ -133,14 +123,7 @@ export function ExerciseScreen() {
   const lastAccuracy = meta?.lastSessionAccuracy ?? stats.lastAccuracy;
 
   return (
-    <AppShell
-      active="exercise"
-      title="Exercise"
-      headerAction={
-        <button className="icon-button">
-          <Icon name="ellipsis" className="text-sm" />
-        </button>
-      }>
+    <AppShell active="exercise" title="Exercise">
       <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
         <div className="mt-4 text-center">
           <h2 className="text-3xl font-extrabold text-slate-900">
@@ -177,18 +160,11 @@ export function ExerciseScreen() {
           ) : (
             <>
               {syncMessage}
-              {liveSet ? (
-                <span className="ml-1 font-bold text-slate-900">
-                  Set #{liveSet.set_index}
-                </span>
-              ) : null}
             </>
           )}
         </div>
 
-        <div className="relative mt-4 flex flex-col items-center gap-6 overflow-hidden rounded-3xl border border-slate-100 bg-white p-8 text-center shadow-soft">
-          <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-[rgba(244,124,124,0.10)] blur-2xl" />
-          <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-[rgba(142,155,250,0.10)] blur-2xl" />
+        <div className="relative mt-4 flex flex-col items-center gap-6 overflow-hidden rounded-[20px] border border-slate-100 bg-white p-8 text-center shadow-soft">
           <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border border-slate-50 bg-(--brand-bg) shadow-inner">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-(--brand-blue) shadow-sm">
               <Icon
@@ -242,7 +218,13 @@ export function ExerciseScreen() {
               </>
             )}
           </span>
-          <span style={{ color: "var(--brand-blue)" }}>View History</span>
+          <button
+            type="button"
+            onClick={() => router.push("/exercise/history")}
+            className="font-semibold"
+            style={{ color: "var(--brand-blue)" }}>
+            View History
+          </button>
         </div>
       </div>
     </AppShell>

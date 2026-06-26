@@ -18,7 +18,11 @@ import {
   saveQuizSessionId,
 } from "@/lib/session";
 
-export function ResultsScreen() {
+export function ResultsScreen({
+  requestedSessionId = null,
+}: {
+  requestedSessionId?: string | null;
+}) {
   const [liveResult, setLiveResult] = useState<QuizResultResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +32,7 @@ export function ResultsScreen() {
 
     async function loadResult() {
       const token = getAccessToken();
-      const sessionId = loadQuizSessionId();
+      const sessionId = requestedSessionId || loadQuizSessionId();
       if (!token || !sessionId) {
         setLoading(false);
         return;
@@ -60,7 +64,7 @@ export function ResultsScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [requestedSessionId]);
 
   const summary = liveResult?.summary;
   const score = summary ? Math.round(summary.accuracy * 100) : result.score;
@@ -74,6 +78,7 @@ export function ResultsScreen() {
     : liveResult?.incorrectItems.map((item, index) => ({
         ...item,
         quizItemId: item.wordId,
+        wordId: item.wordId,
         questionType: "review",
         sequenceNo: index + 1,
       }));
@@ -82,6 +87,7 @@ export function ResultsScreen() {
       ? [
           {
             quizItemId: "demo",
+            wordId: "demo",
             word: result.missedWord,
             questionType: "review",
             sequenceNo: 1,
@@ -94,7 +100,7 @@ export function ResultsScreen() {
 
   async function handleRetry() {
     const token = getAccessToken();
-    const sessionId = loadQuizSessionId();
+    const sessionId = requestedSessionId || loadQuizSessionId();
     if (!token || !sessionId || !liveResult?.canRetry) {
       return;
     }
@@ -269,8 +275,9 @@ export function ResultsScreen() {
           ) : quickBreakdownItems.length > 0 ? (
             <div className="flex flex-col gap-3">
               {quickBreakdownItems.map((item) => (
-                <div
+                <Link
                   key={item.quizItemId}
+                  href={item.wordId === "demo" ? "/results" : `/words/${item.wordId}`}
                   className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
                   style={{ borderColor: "rgba(244,124,124,0.20)" }}>
                   <div
@@ -299,7 +306,7 @@ export function ResultsScreen() {
                       {item.correctAnswer || "No accepted answer"}
                     </p>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           ) : (

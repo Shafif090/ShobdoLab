@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
 import { formatWordList, learnWords } from "@/components/data";
@@ -67,6 +68,7 @@ export function LearnScreen() {
               english: item.word.english,
               bangla: item.word.bangla,
               pos: item.word.pos,
+              wordId: item.word.id,
             },
           ]
         : [],
@@ -99,14 +101,7 @@ export function LearnScreen() {
   }
 
   return (
-    <AppShell
-      active="learn"
-      title="Learn"
-      headerAction={
-        <button className="icon-button">
-          <Icon name="ellipsis" className="text-sm" />
-        </button>
-      }>
+    <AppShell active="learn" title="Learn">
       <div className="mx-auto w-full max-w-3xl">
         <div className="mb-6 flex flex-col gap-4">
           <div>
@@ -136,7 +131,7 @@ export function LearnScreen() {
             type="button"
             onClick={() => void handleNextSet()}
             disabled={nextLoading}
-            className="group relative flex items-center justify-between overflow-hidden rounded-3xl p-5 text-white shadow-[0_8px_30px_rgba(142,155,250,0.3)] transition hover:-translate-y-1"
+            className="group relative flex items-center justify-between overflow-hidden rounded-[20px] p-5 text-white shadow-[0_8px_30px_rgba(142,155,250,0.22)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:opacity-75"
             style={{
               backgroundImage:
                 "linear-gradient(135deg, var(--brand-blue), #B2B9FA)",
@@ -187,25 +182,40 @@ export function LearnScreen() {
                   </div>
                 </div>
               ))
-            : liveWords.map((word) => (
-            <div
-              key={word.english}
-              className="learn-word-card rounded-[20px] border bg-white p-5 transition">
-              <div className="mb-2 flex items-start justify-between gap-3">
-                <h3 className="text-2xl font-black tracking-tight text-slate-900">
-                  {word.english}
-                </h3>
-                <span className="mt-1 shrink-0 rounded-md border border-sky-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                  {formatWordList(word.pos)}
-                </span>
-              </div>
-              <div className="mt-3 border-t border-slate-100 pt-3">
-                <p className="text-lg font-bold text-teal-700">
-                  {formatWordList(word.bangla)}
-                </p>
-              </div>
-            </div>
-              ))}
+            : liveWords.map((word) => {
+                const card = (
+                  <>
+                    <div className="mb-2 flex items-start justify-between gap-3">
+                      <h3 className="text-2xl font-black tracking-tight text-slate-900">
+                        {word.english}
+                      </h3>
+                      <span className="mt-1 shrink-0 rounded-md border border-sky-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                        {formatWordList(word.pos)}
+                      </span>
+                    </div>
+                    <div className="mt-3 border-t border-slate-100 pt-3">
+                      <p className="text-lg font-bold text-teal-700">
+                        {formatWordList(word.bangla)}
+                      </p>
+                    </div>
+                  </>
+                );
+
+                return word.wordId ? (
+                  <Link
+                    key={word.english}
+                    href={`/words/${word.wordId}`}
+                    className="learn-word-card rounded-[20px] border bg-white p-5 transition">
+                    {card}
+                  </Link>
+                ) : (
+                  <div
+                    key={word.english}
+                    className="learn-word-card rounded-[20px] border bg-white p-5 transition">
+                    {card}
+                  </div>
+                );
+              })}
         </div>
       </div>
     </AppShell>

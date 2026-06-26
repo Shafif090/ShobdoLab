@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import Svg, { Path } from "react-native-svg";
 import { Colors } from "@/constants/theme";
@@ -13,14 +13,33 @@ import {
   Screen,
 } from "@/components";
 import { ApiError, login as loginRequest } from "@/lib/api";
-import { saveAuthSession } from "@/lib/session";
+import { getOAuthErrorMessage, signInWithGoogle } from "@/lib/oauth";
+import { consumeSessionMessage, saveAuthSession } from "@/lib/session";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadSessionMessage() {
+      const message = await consumeSessionMessage();
+      if (active && message) {
+        setError(message);
+      }
+    }
+
+    void loadSessionMessage();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleLogin() {
     if (loading) return;
@@ -40,6 +59,22 @@ export default function LoginScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    if (googleLoading) return;
+
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      await signInWithGoogle();
+      router.replace("/(tabs)");
+    } catch (exception) {
+      setError(getOAuthErrorMessage(exception));
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -79,6 +114,8 @@ export default function LoginScreen() {
         </View>
 
         <Pressable
+          onPress={() => void handleGoogleLogin()}
+          disabled={googleLoading || loading}
           style={{
             minHeight: 56,
             borderRadius: 18,
@@ -89,6 +126,7 @@ export default function LoginScreen() {
             justifyContent: "center",
             flexDirection: "row",
             gap: 10,
+            opacity: googleLoading || loading ? 0.7 : 1,
           }}>
           <Svg width={18} height={18} viewBox="0 0 18 18" fill="none">
             <Path
@@ -109,7 +147,7 @@ export default function LoginScreen() {
             />
           </Svg>
           <Text style={{ fontWeight: "700", color: "#334155" }}>
-            Continue with Google
+            {googleLoading ? "Opening Google..." : "Continue with Google"}
           </Text>
         </Pressable>
 

@@ -4,6 +4,7 @@ import type { AuthSession } from "./api";
 
 const SESSION_KEY = "shobdolab.auth-session";
 const QUIZ_SESSION_KEY = "shobdolab.quiz-session-id";
+const SESSION_MESSAGE_KEY = "shobdolab.session-message";
 
 function canUseWebStorage() {
   return Platform.OS === "web" && typeof window !== "undefined";
@@ -36,7 +37,12 @@ async function deleteStorageItem(key: string) {
 }
 
 export async function saveAuthSession(session: AuthSession) {
-  await setStorageItem(SESSION_KEY, JSON.stringify(session));
+  const expiresAt =
+    session.expiresAt ??
+    (session.expiresIn ? Date.now() + session.expiresIn * 1000 : null);
+
+  await setStorageItem(SESSION_KEY, JSON.stringify({ ...session, expiresAt }));
+  await deleteStorageItem(SESSION_MESSAGE_KEY);
 }
 
 export async function loadAuthSession() {
@@ -54,11 +60,29 @@ export async function loadAuthSession() {
 
 export async function getAccessToken() {
   const session = await loadAuthSession();
+  if (session?.expiresAt && Date.now() >= session.expiresAt - 30000) {
+    await expireAuthSession();
+    return null;
+  }
+
   return session?.accessToken ?? null;
 }
 
 export async function clearAuthSession() {
   await deleteStorageItem(SESSION_KEY);
+}
+
+export async function expireAuthSession(
+  message = "Your session expired. Please sign in again.",
+) {
+  await deleteStorageItem(SESSION_KEY);
+  await setStorageItem(SESSION_MESSAGE_KEY, message);
+}
+
+export async function consumeSessionMessage() {
+  const message = await getStorageItem(SESSION_MESSAGE_KEY);
+  await deleteStorageItem(SESSION_MESSAGE_KEY);
+  return message;
 }
 
 export async function saveQuizSessionId(sessionId: string) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { formatWordList } from "@/components/data";
@@ -133,8 +134,9 @@ export function LearnedWordsScreen() {
         ) : words.length > 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
             {words.map((word) => (
-              <article
+              <Link
                 key={word.wordId}
+                href={`/words/${word.wordId}`}
                 className="learn-word-card rounded-[20px] border bg-white p-5 transition">
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <h3 className="min-w-0 flex-1 break-words text-2xl font-black tracking-tight text-slate-900">
@@ -161,7 +163,7 @@ export function LearnedWordsScreen() {
                     </span>
                   </div>
                 </div>
-              </article>
+              </Link>
             ))}
           </div>
         ) : (

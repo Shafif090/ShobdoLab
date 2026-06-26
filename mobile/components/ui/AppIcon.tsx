@@ -25,7 +25,8 @@ type IconName =
   | "ellipsis"
   | "volume"
   | "turtle"
-  | "list";
+  | "list"
+  | "search";
 
 export function AppIcon({
   name,
@@ -168,6 +169,14 @@ export function AppIcon({
     ),
     list: (
       <FontAwesome6 name="list" size={size} color={color} iconStyle="solid" />
+    ),
+    search: (
+      <FontAwesome6
+        name="magnifying-glass"
+        size={size}
+        color={color}
+        iconStyle="solid"
+      />
     ),
   };
 

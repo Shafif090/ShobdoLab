@@ -9,14 +9,9 @@ import { Skeleton } from "@/components/ui";
 import {
   ApiError,
   getReviseSummary,
-  startReviseSession,
   type ReviseSummaryResponse,
 } from "@/lib/api";
-import {
-  clearQuizSessionId,
-  getAccessToken,
-  saveQuizSessionId,
-} from "@/lib/session";
+import { getAccessToken } from "@/lib/session";
 
 export function ReviseScreen() {
   const router = useRouter();
@@ -92,40 +87,17 @@ export function ReviseScreen() {
     },
   ] as const;
 
-  async function startRevision(type: (typeof cards)[number]["type"]) {
+  function openRevision(type: (typeof cards)[number]["type"]) {
     if (type === "recent") {
       router.push("/revise/recent");
       return;
     }
 
-    const token = getAccessToken();
-    if (!token) {
-      router.push("/typing");
-      return;
-    }
-
-    try {
-      const response = await startReviseSession(token, {
-        type,
-        mode: "mixed",
-      });
-      saveQuizSessionId(response.session.id);
-    } catch {
-      clearQuizSessionId();
-    }
-
-    router.push("/typing");
+    router.push(`/revise/${type}`);
   }
 
   return (
-    <AppShell
-      active="revise"
-      title="Revise"
-      headerAction={
-        <button className="icon-button">
-          <Icon name="ellipsis" className="text-sm" />
-        </button>
-      }>
+    <AppShell active="revise" title="Revise">
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
         <div className="mb-2 flex flex-col gap-1">
           <h2 className="text-2xl font-bold text-slate-900">
@@ -172,7 +144,7 @@ export function ReviseScreen() {
           return (
             <div
               key={card.title}
-              className={`rounded-3xl border-2 p-5 shadow-soft ${colors.wrapper}`}>
+              className={`rounded-[20px] border-2 p-5 shadow-soft transition hover:-translate-y-0.5 ${colors.wrapper}`}>
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div
@@ -208,8 +180,8 @@ export function ReviseScreen() {
 
               <button
                 type="button"
-                onClick={() => void startRevision(card.type)}
-                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition hover:-translate-y-0.5 ${colors.button}`}>
+                onClick={() => openRevision(card.type)}
+                className={`mt-4 flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold transition hover:-translate-y-0.5 active:translate-y-0 ${colors.button}`}>
                 {card.cta}
                 <Icon name="arrowRight" className="text-xs" />
               </button>

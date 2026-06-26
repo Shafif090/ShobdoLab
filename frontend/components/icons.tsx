@@ -23,7 +23,8 @@ type IconName =
   | "mail"
   | "lock"
   | "shield"
-  | "star";
+  | "star"
+  | "search";
 
 export function Icon({
   name,
@@ -58,6 +59,7 @@ export function Icon({
     lock: "fa-solid fa-lock",
     shield: "fa-solid fa-shield-halved",
     star: "fa-solid fa-star",
+    search: "fa-solid fa-magnifying-glass",
   }[name];
 
   return (

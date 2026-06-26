@@ -1,5 +1,5 @@
-import { LearnedWordsScreen } from "@/components/screens";
+import { ReviseWordsScreen } from "@/components/screens";
 
 export default function RecentWordsPage() {
-  return <LearnedWordsScreen />;
+  return <ReviseWordsScreen type="recent" />;
 }

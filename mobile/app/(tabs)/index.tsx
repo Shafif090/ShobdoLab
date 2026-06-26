@@ -28,8 +28,6 @@ function ActionCard({
 
   return (
     <View style={{ marginLeft, marginRight, paddingBottom: 3 }}>
-      {" "}
-      {/* Hard bottom shadow */}
       <View
         style={{
           position: "absolute",
@@ -125,6 +123,75 @@ function ArrowDivider({ right = false }: { right?: boolean }) {
   );
 }
 
+function MetricCard({
+  icon,
+  iconColor,
+  borderColor,
+  backgroundColor,
+  value,
+  label,
+  loading,
+}: {
+  icon: Parameters<typeof AppIcon>[0]["name"];
+  iconColor: string;
+  borderColor: string;
+  backgroundColor: string;
+  value: number;
+  label: string;
+  loading: boolean;
+}) {
+  return (
+    <View
+      style={{
+        flex: 1,
+        minWidth: 160,
+        borderRadius: 18,
+        borderWidth: 1,
+        borderColor,
+        backgroundColor,
+        padding: 18,
+        paddingVertical: 22,
+        flexDirection: "row",
+        gap: 12,
+        alignItems: "center",
+      }}>
+      <View
+        style={{
+          width: 40,
+          height: 40,
+          borderRadius: 22,
+          backgroundColor: "rgba(255,255,255,0.62)",
+          alignItems: "center",
+          justifyContent: "center",
+        }}>
+        <AppIcon name={icon} size={18} color={iconColor} />
+      </View>
+      <View style={{ flex: 1 }}>
+        {loading ? (
+          <Skeleton style={{ width: 44, height: 28, marginBottom: 6 }} />
+        ) : (
+          <Text
+            style={{
+              fontSize: 24,
+              fontWeight: "800",
+              color: Colors.text,
+            }}>
+            {value}
+          </Text>
+        )}
+        <Text
+          style={{
+            fontSize: 12,
+            fontWeight: "500",
+            color: Colors.muted,
+          }}>
+          {label}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 export default function HomeTab() {
   const [summary, setSummary] = useState<HomeSummaryResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -169,10 +236,7 @@ export default function HomeTab() {
       title="ShobdoLab"
       active="home"
       right={
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <IconButton icon="trophy" />
-          <IconButton icon="bell" />
-        </View>
+        <IconButton icon="trophy" onPress={() => router.push("/achievements")} />
       }>
       <View style={{ gap: 28 }}>
         <View style={{ gap: 14 }}>
@@ -185,105 +249,45 @@ export default function HomeTab() {
               textTransform: "uppercase",
               letterSpacing: 1.5,
             }}>
-            Today&apos;s Progress
+            {"Today's Progress"}
           </Text>
           <View style={{ flexDirection: "row", gap: 12, flexWrap: "wrap" }}>
-            <View
-              style={{
-                flex: 1,
-                minWidth: 170,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: Colors.purple,
-                backgroundColor: "rgba(233,213,255,0.3)",
-                padding: 18,
-                paddingVertical: 24,
-                flexDirection: "row",
-                gap: 12,
-                alignItems: "center",
-              }}>
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 22,
-                  backgroundColor: Colors.purple,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                <AppIcon name="fire" size={18} color="#7C3AED" />
-              </View>
-              <View>
-                {loading ? (
-                  <Skeleton style={{ width: 44, height: 28, marginBottom: 6 }} />
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 24,
-                      fontWeight: "800",
-                      color: Colors.text,
-                    }}>
-                    {streakDays}
-                  </Text>
-                )}
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "500",
-                    color: Colors.muted,
-                  }}>
-                  Day Streak
-                </Text>
-              </View>
-            </View>
-            <View
-              style={{
-                flex: 1,
-                minWidth: 170,
-                borderRadius: 18,
-                borderWidth: 1,
-                borderColor: Colors.green,
-                backgroundColor: "rgba(161,232,175,0.24)",
-                padding: 18,
-                paddingVertical: 24,
-                flexDirection: "row",
-                gap: 12,
-                alignItems: "center",
-              }}>
-              <View
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: 22,
-                  backgroundColor: Colors.green,
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}>
-                <AppIcon name="book" size={18} color="#047857" />
-              </View>
-              <View>
-                {loading ? (
-                  <Skeleton style={{ width: 44, height: 28, marginBottom: 6 }} />
-                ) : (
-                  <Text
-                    style={{
-                      fontSize: 24,
-                      fontWeight: "800",
-                      color: Colors.text,
-                    }}>
-                    {wordsLearned}
-                  </Text>
-                )}
-                <Text
-                  style={{
-                    fontSize: 12,
-                    fontWeight: "500",
-                    color: Colors.muted,
-                  }}>
-                  Words Learned
-                </Text>
-              </View>
-            </View>
+            <MetricCard
+              icon="fire"
+              iconColor="#7C3AED"
+              borderColor={Colors.purple}
+              backgroundColor="rgba(233,213,255,0.3)"
+              value={streakDays}
+              label="Day Streak"
+              loading={loading}
+            />
+            <MetricCard
+              icon="book"
+              iconColor="#047857"
+              borderColor={Colors.green}
+              backgroundColor="rgba(161,232,175,0.24)"
+              value={wordsLearned}
+              label="Words Learned"
+              loading={loading}
+            />
+            <MetricCard
+              icon="calendar"
+              iconColor="#4F46E5"
+              borderColor={Colors.blue}
+              backgroundColor="rgba(142,155,250,0.14)"
+              value={summary?.dueTomorrowCount ?? 0}
+              label="Due Tomorrow"
+              loading={loading}
+            />
+            <MetricCard
+              icon="exercise"
+              iconColor="#DC2626"
+              borderColor={Colors.orange}
+              backgroundColor="rgba(244,124,124,0.12)"
+              value={summary?.today.exercise ?? stats.todayExercise}
+              label="Exercises Today"
+              loading={loading}
+            />
           </View>
         </View>
 

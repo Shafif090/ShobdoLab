@@ -1,12 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { AuthShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
 import { BackButton, BrandInput, GoogleMark } from "@/components/ui";
-import { ApiError, login as loginRequest } from "@/lib/api";
-import { saveAuthSession } from "@/lib/session";
+import {
+  ApiError,
+  getGoogleAuthUrl,
+  login as loginRequest,
+} from "@/lib/api";
+import { consumeSessionMessage, saveAuthSession } from "@/lib/session";
 
 export function LoginScreen() {
   const router = useRouter();
@@ -14,7 +18,15 @@ export function LoginScreen() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const message = consumeSessionMessage();
+    if (message) {
+      setError(message);
+    }
+  }, []);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -36,6 +48,26 @@ export function LoginScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleLogin() {
+    if (googleLoading) return;
+
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const response = await getGoogleAuthUrl(redirectTo);
+      window.location.assign(response.url);
+    } catch (exception) {
+      if (exception instanceof ApiError) {
+        setError(exception.message);
+      } else {
+        setError("Unable to start Google sign in right now.");
+      }
+      setGoogleLoading(false);
     }
   }
 
@@ -78,9 +110,11 @@ export function LoginScreen() {
         <button
           className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 bg-white py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
           style={{ borderColor: "var(--brand-border)" }}
-          type="button">
+          type="button"
+          onClick={() => void handleGoogleLogin()}
+          disabled={googleLoading || loading}>
           <GoogleMark />
-          Continue with Google
+          {googleLoading ? "Opening Google..." : "Continue with Google"}
         </button>
 
         <div className="flex items-center gap-3">

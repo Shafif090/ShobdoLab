@@ -1,4 +1,8 @@
 export { ExerciseScreen } from "./ExerciseScreen";
+export { ExerciseHistoryScreen } from "./ExerciseHistoryScreen";
+export { AchievementsScreen } from "./AchievementsScreen";
+export { AuthCallbackScreen } from "./AuthCallbackScreen";
+export { DictionaryScreen } from "./DictionaryScreen";
 export { HomeScreen } from "./HomeScreen";
 export { LearnScreen } from "./LearnScreen";
 export { LearnedWordsScreen } from "./LearnedWordsScreen";
@@ -6,5 +10,7 @@ export { LoginScreen } from "./LoginScreen";
 export { ResultsScreen } from "./ResultsScreen";
 export { QuizScreen } from "./QuizScreen";
 export { ReviseScreen } from "./ReviseScreen";
+export { ReviseWordsScreen } from "./ReviseWordsScreen";
+export { WordDetailScreen } from "./WordDetailScreen";
 export { SignupScreen } from "./SignupScreen";
 export { TypingScreen } from "./TypingScreen";

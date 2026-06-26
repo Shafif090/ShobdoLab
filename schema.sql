@@ -390,7 +390,10 @@ CREATE TABLE achievements (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   code        TEXT UNIQUE NOT NULL,
   title       TEXT NOT NULL,
-  description TEXT NOT NULL
+  description TEXT NOT NULL,
+  target      INT NOT NULL DEFAULT 1,
+  metric_key  TEXT NOT NULL DEFAULT 'manual',
+  sort_order  INT NOT NULL DEFAULT 0
 );
 
 CREATE TABLE user_achievements (
@@ -399,6 +402,48 @@ CREATE TABLE user_achievements (
   awarded_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (user_id, achievement_id)
 );
+
+ALTER TABLE achievements
+  ADD COLUMN IF NOT EXISTS target INT NOT NULL DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS metric_key TEXT NOT NULL DEFAULT 'manual',
+  ADD COLUMN IF NOT EXISTS sort_order INT NOT NULL DEFAULT 0;
+
+INSERT INTO achievements (code, title, description, target, metric_key, sort_order)
+VALUES
+  ('WORD_COLLECTOR_25', 'Word Collector', 'Learn 25 words.', 25, 'words_learned', 10),
+  ('VOCABULARY_BUILDER_50', 'Vocabulary Builder', 'Learn 50 words.', 50, 'words_learned', 20),
+  ('HUNDRED_WORD_HERO_100', 'Hundred Word Hero', 'Learn 100 words.', 100, 'words_learned', 30),
+  ('WORD_VAULT_250', 'Word Vault', 'Learn 250 words.', 250, 'words_learned', 40),
+  ('LIVING_DICTIONARY_500', 'Living Dictionary', 'Learn 500 words.', 500, 'words_learned', 50),
+  ('MEMORY_SPARK_10', 'Memory Spark', 'Master 10 words.', 10, 'mastered_words', 60),
+  ('STEADY_RECALL_25', 'Steady Recall', 'Master 25 words.', 25, 'mastered_words', 70),
+  ('IRON_MEMORY_100', 'Iron Memory', 'Master 100 words.', 100, 'mastered_words', 80),
+  ('THREE_DAY_FLAME_3', 'Three-Day Flame', 'Keep a 3-day streak.', 3, 'streak_days', 90),
+  ('WEEK_WARRIOR_7', 'Week Warrior', 'Keep a 7-day streak.', 7, 'streak_days', 100),
+  ('TWO_WEEK_TITAN_14', 'Two-Week Titan', 'Keep a 14-day streak.', 14, 'streak_days', 110),
+  ('MONTH_MONK_30', 'Month Monk', 'Keep a 30-day streak.', 30, 'streak_days', 120),
+  ('ACTIVE_LEARNER_7', 'Active Learner', 'Practice on 7 different days.', 7, 'active_days', 130),
+  ('HABIT_ARCHITECT_30', 'Habit Architect', 'Practice on 30 different days.', 30, 'active_days', 140),
+  ('REVIEW_STARTER_25', 'Review Starter', 'Revise 25 words total.', 25, 'revised_total', 150),
+  ('REVIEW_RANGER_100', 'Review Ranger', 'Revise 100 words total.', 100, 'revised_total', 160),
+  ('WEAK_WORD_TAMER_20', 'Weak Word Tamer', 'Improve 20 weak words to strength 3+.', 20, 'weak_words_tamed', 170),
+  ('EXERCISE_REGULAR_10', 'Exercise Regular', 'Complete 10 exercise sessions.', 10, 'exercise_sessions', 180),
+  ('TRAINING_MACHINE_50', 'Training Machine', 'Complete 50 exercise sessions.', 50, 'exercise_sessions', 190),
+  ('SHARP_SESSION_1', 'Sharp Session', 'Score 90%+ in an exercise session.', 1, 'sharp_exercise_sessions', 200),
+  ('SHARPSHOOTER_10', 'Sharpshooter', 'Score 90%+ in 10 exercise sessions.', 10, 'sharp_exercise_sessions', 210),
+  ('PERFECT_RUN_1', 'Perfect Run', 'Complete an exercise with 0 mistakes.', 1, 'perfect_exercise_sessions', 220),
+  ('FLAWLESS_FIVE_5', 'Flawless Five', 'Complete 5 perfect sessions.', 5, 'perfect_sessions', 230),
+  ('MCQ_MARKSMAN_10', 'MCQ Marksman', 'Complete 10 MCQ sessions.', 10, 'mcq_sessions', 240),
+  ('ANSWER_MARATHON_500', 'Answer Marathon', 'Answer 500 quiz questions total.', 500, 'answered_questions', 250),
+  ('PRECISION_SCHOLAR_200', 'Precision Scholar', 'Reach 90%+ accuracy across at least 200 answered questions.', 1, 'precision_scholar', 260),
+  ('NO_RUSH_RECALL_10', 'No-Rush Recall', 'Complete 10 sessions with at least 80% accuracy.', 10, 'steady_sessions', 270),
+  ('DAILY_TRIPLE_1', 'Daily Triple', 'Learn, revise, and exercise on the same day.', 1, 'daily_triple_days', 280)
+ON CONFLICT (code) DO UPDATE SET
+  title = EXCLUDED.title,
+  description = EXCLUDED.description,
+  target = EXCLUDED.target,
+  metric_key = EXCLUDED.metric_key,
+  sort_order = EXCLUDED.sort_order;
 
 
 -- ── 12. ROW LEVEL SECURITY ────────────────────────────────────

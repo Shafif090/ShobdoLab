@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
+import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
-import { AppIcon, IconButton, Skeleton, TabScreen } from "@/components";
+import { AppIcon, Skeleton, TabScreen } from "@/components";
 import { formatWordList, learnWords, type LearnWord } from "@/constants/data";
 import {
   ApiError,
@@ -66,6 +67,7 @@ export default function LearnTab() {
               english: item.word.english,
               bangla: item.word.bangla,
               pos: item.word.pos,
+              wordId: item.word.id,
             },
           ]
         : [],
@@ -98,10 +100,7 @@ export default function LearnTab() {
   }
 
   return (
-    <TabScreen
-      title="Learn"
-      active="learn"
-      right={<IconButton icon="ellipsis" />}>
+    <TabScreen title="Learn" active="learn">
       <View style={{ gap: 18 }}>
         <View
           style={{
@@ -235,63 +234,72 @@ export default function LearnTab() {
                 </View>
               ))
             : liveWords.map((word) => (
-            <View
-              key={word.english}
-              style={{
-                borderRadius: 20,
-                backgroundColor: Colors.surface,
-                borderWidth: 1,
-                borderColor: "rgba(148,163,184,0.22)",
-                padding: 18,
-                shadowColor: Colors.shadow,
-                shadowOffset: { width: 0, height: 12 },
-                shadowOpacity: 0.08,
-                shadowRadius: 24,
-                elevation: 3,
-              }}>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  alignItems: "flex-start",
-                }}>
-                <Text
+                <Pressable
+                  key={word.english}
+                  onPress={() => {
+                    if (word.wordId) {
+                      router.push(`/word/${word.wordId}`);
+                    }
+                  }}
                   style={{
-                    fontSize: 26,
-                    fontWeight: "800",
-                    color: Colors.text,
-                    flex: 1,
+                    borderRadius: 20,
+                    backgroundColor: Colors.surface,
+                    borderWidth: 1,
+                    borderColor: "rgba(148,163,184,0.22)",
+                    padding: 18,
+                    shadowColor: Colors.shadow,
+                    shadowOffset: { width: 0, height: 12 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 24,
+                    elevation: 3,
                   }}>
-                  {word.english}
-                </Text>
-                <Text
-                  style={{
-                    paddingHorizontal: 8,
-                    paddingVertical: 3,
-                    borderRadius: 8,
-                    backgroundColor: "#EEF2FF",
-                    color: Colors.muted,
-                    fontSize: 10,
-                    fontWeight: "800",
-                    textTransform: "uppercase",
-                  }}>
-                  {formatWordList(word.pos)}
-                </Text>
-              </View>
-              <View
-                style={{
-                  marginTop: 14,
-                  paddingTop: 14,
-                  borderTopWidth: 1,
-                  borderTopColor: "#F1F5F9",
-                }}>
-                <Text
-                  style={{ fontSize: 18, fontWeight: "800", color: "#0F766E" }}>
-                  {formatWordList(word.bangla)}
-                </Text>
-              </View>
-            </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      alignItems: "flex-start",
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 26,
+                        fontWeight: "800",
+                        color: Colors.text,
+                        flex: 1,
+                      }}>
+                      {word.english}
+                    </Text>
+                    <Text
+                      style={{
+                        paddingHorizontal: 8,
+                        paddingVertical: 3,
+                        borderRadius: 8,
+                        backgroundColor: "#EEF2FF",
+                        color: Colors.muted,
+                        fontSize: 10,
+                        fontWeight: "800",
+                        textTransform: "uppercase",
+                      }}>
+                      {formatWordList(word.pos)}
+                    </Text>
+                  </View>
+                  <View
+                    style={{
+                      marginTop: 14,
+                      paddingTop: 14,
+                      borderTopWidth: 1,
+                      borderTopColor: "#F1F5F9",
+                    }}>
+                    <Text
+                      style={{
+                        fontSize: 18,
+                        fontWeight: "800",
+                        color: "#0F766E",
+                      }}>
+                      {formatWordList(word.bangla)}
+                    </Text>
+                  </View>
+                </Pressable>
               ))}
         </View>
       </View>

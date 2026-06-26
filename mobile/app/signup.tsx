@@ -12,6 +12,7 @@ import {
   Screen,
 } from "@/components";
 import { ApiError, signup as signupRequest } from "@/lib/api";
+import { getOAuthErrorMessage, signInWithGoogle } from "@/lib/oauth";
 import { saveAuthSession } from "@/lib/session";
 
 function scorePassword(value: string) {
@@ -31,6 +32,7 @@ export default function SignupScreen() {
   const [visible, setVisible] = useState(false);
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const score = scorePassword(password);
   const matches = password.length > 0 && password === confirmPassword;
@@ -69,6 +71,22 @@ export default function SignupScreen() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleGoogleSignup() {
+    if (googleLoading) return;
+
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      await signInWithGoogle();
+      router.replace("/(tabs)");
+    } catch (exception) {
+      setError(getOAuthErrorMessage(exception));
+    } finally {
+      setGoogleLoading(false);
     }
   }
 
@@ -121,6 +139,45 @@ export default function SignupScreen() {
         </View>
 
         <View style={{ gap: 16 }}>
+          <Pressable
+            onPress={() => void handleGoogleSignup()}
+            disabled={googleLoading || loading}
+            style={{
+              minHeight: 56,
+              borderRadius: 18,
+              borderWidth: 2,
+              borderColor: Colors.border,
+              backgroundColor: Colors.surface,
+              alignItems: "center",
+              justifyContent: "center",
+              flexDirection: "row",
+              gap: 10,
+              opacity: googleLoading || loading ? 0.7 : 1,
+            }}>
+            <Text style={{ fontSize: 18, fontWeight: "800" }}>G</Text>
+            <Text style={{ fontWeight: "700", color: "#334155" }}>
+              {googleLoading ? "Opening Google..." : "Sign up with Google"}
+            </Text>
+          </Pressable>
+
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View
+              style={{ flex: 1, height: 1, backgroundColor: Colors.border }}
+            />
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: "700",
+                color: "#94A3B8",
+                letterSpacing: 2,
+              }}>
+              OR
+            </Text>
+            <View
+              style={{ flex: 1, height: 1, backgroundColor: Colors.border }}
+            />
+          </View>
+
           <BrandInput
             label="Full Name"
             icon="person"

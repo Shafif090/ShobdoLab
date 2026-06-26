@@ -8,7 +8,7 @@ import { stats } from "./data";
 import { getHomeSummary } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
-type NavKey = "home" | "learn" | "revise" | "exercise";
+type NavKey = "home" | "learn" | "revise" | "exercise" | "dictionary";
 
 const navItems: Array<{
   key: NavKey;
@@ -20,6 +20,12 @@ const navItems: Array<{
   { key: "learn", href: "/learn", label: "Learn", icon: "book" },
   { key: "revise", href: "/revise", label: "Revise", icon: "revise" },
   { key: "exercise", href: "/exercise", label: "Exercise", icon: "exercise" },
+  {
+    key: "dictionary",
+    href: "/dictionary",
+    label: "Dictionary",
+    icon: "search",
+  },
 ];
 
 export function AppShell({
@@ -115,7 +121,7 @@ export function AppShell({
             })}
           </nav>
           <div
-            className="flex items-center gap-3 rounded-2xl border p-4"
+            className="flex items-center gap-3 rounded-2xl border p-4 shadow-soft"
             style={{
               borderColor: "rgba(233,213,255,0.8)",
               backgroundColor: "rgba(233,213,255,0.3)",
@@ -129,7 +135,7 @@ export function AppShell({
               <p className="text-sm font-bold text-slate-900">
                 {streakDays}-Day Streak!
               </p>
-              <p className="text-xs text-slate-500">Keep it up 🔥</p>
+              <p className="text-xs text-slate-500">Keep going</p>
             </div>
           </div>
         </div>
@@ -144,13 +150,12 @@ export function AppShell({
           </h1>
           {headerAction ?? (
             <div className="flex items-center gap-3">
-              <button className="icon-button">
+              <Link
+                href="/achievements"
+                className="icon-button"
+                aria-label="Open achievements">
                 <Icon name="trophy" className="text-sm" />
-              </button>
-              <button className="icon-button relative">
-                <Icon name="bell" className="text-sm" />
-                <span className="absolute right-2.5 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500" />
-              </button>
+              </Link>
             </div>
           )}
         </header>
@@ -223,8 +228,6 @@ export function AuthShell({
       <aside
         className="relative hidden min-h-screen flex-1 flex-col justify-between overflow-hidden p-12 text-white md:flex"
         style={{ backgroundColor: accentVar }}>
-        <div className="absolute right-16 top-16 h-48 w-48 rounded-full bg-white/10 blur-3xl" />
-        <div className="absolute bottom-24 left-8 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
         <div className="absolute left-1/2 top-1/2 h-80 w-80 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/20" />
         <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10" />
 

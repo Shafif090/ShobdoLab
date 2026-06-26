@@ -25,6 +25,27 @@ async function getExactCount(query) {
   return count ?? 0;
 }
 
+function learnedWordPayload(row) {
+  const word = Array.isArray(row.words) ? row.words[0] : row.words;
+
+  return {
+    wordId: row.word_id,
+    english: word?.english ?? "",
+    bangla: word?.bangla ?? [],
+    pos: word?.pos ?? [],
+    root: word?.root ?? null,
+    familyId: word?.family_id ?? null,
+    status: row.status,
+    strength: row.strength,
+    mistakes: row.mistakes,
+    correctCount: row.correct_count,
+    seenCount: row.seen_count,
+    learnedAt: row.created_at,
+    lastSeenAt: row.last_seen_at,
+    nextReviewAt: row.next_review_at,
+  };
+}
+
 export async function getReviseSummary(req, res) {
   try {
     const db = req.supabase || supabase;
@@ -72,48 +93,49 @@ export async function getReviseSummary(req, res) {
 export async function getLearnedWords(req, res) {
   try {
     const db = req.supabase || supabase;
+    const type = ["due", "weak", "recent"].includes(req.query.type)
+      ? req.query.type
+      : "recent";
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 20, 50));
     const from = (page - 1) * limit;
     const to = from + limit - 1;
+    const now = new Date().toISOString();
 
-    const { data, error, count } = await db
+    let query = db
       .from("user_words")
       .select(
         "word_id, status, strength, mistakes, correct_count, seen_count, last_seen_at, next_review_at, created_at, words(id, english, bangla, pos, root, family_id)",
         { count: "exact" },
       )
-      .eq("user_id", req.userId)
-      .order("created_at", { ascending: false })
-      .range(from, to);
+      .eq("user_id", req.userId);
+
+    if (type === "due") {
+      query = query
+        .lte("next_review_at", now)
+        .order("next_review_at", { ascending: true, nullsFirst: false })
+        .order("mistakes", { ascending: false });
+    } else if (type === "weak") {
+      query = query
+        .or("strength.lte.2,mistakes.gte.3")
+        .order("mistakes", { ascending: false })
+        .order("strength", { ascending: true })
+        .order("last_seen_at", { ascending: true, nullsFirst: true });
+    } else {
+      query = query.order("created_at", { ascending: false });
+    }
+
+    const { data, error, count } = await query.range(from, to);
 
     if (error) {
       throw error;
     }
 
-    const items = (data || []).map((row) => {
-      const word = Array.isArray(row.words) ? row.words[0] : row.words;
-
-      return {
-        wordId: row.word_id,
-        english: word?.english ?? "",
-        bangla: word?.bangla ?? [],
-        pos: word?.pos ?? [],
-        root: word?.root ?? null,
-        familyId: word?.family_id ?? null,
-        status: row.status,
-        strength: row.strength,
-        mistakes: row.mistakes,
-        correctCount: row.correct_count,
-        seenCount: row.seen_count,
-        learnedAt: row.created_at,
-        lastSeenAt: row.last_seen_at,
-        nextReviewAt: row.next_review_at,
-      };
-    });
+    const items = (data || []).map(learnedWordPayload);
 
     return res.json({
       items,
+      type,
       page,
       limit,
       total: count ?? items.length,

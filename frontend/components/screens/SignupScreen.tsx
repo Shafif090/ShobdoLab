@@ -5,7 +5,11 @@ import { type FormEvent, useMemo, useState } from "react";
 import { AuthShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
 import { BackButton, BrandInput, GoogleMark } from "@/components/ui";
-import { ApiError, signup as signupRequest } from "@/lib/api";
+import {
+  ApiError,
+  getGoogleAuthUrl,
+  signup as signupRequest,
+} from "@/lib/api";
 import { saveAuthSession } from "@/lib/session";
 
 function passwordScore(value: string) {
@@ -29,6 +33,7 @@ export function SignupScreen() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const strength = passwordScore(password);
@@ -73,6 +78,26 @@ export function SignupScreen() {
     }
   }
 
+  async function handleGoogleSignup() {
+    if (googleLoading) return;
+
+    setGoogleLoading(true);
+    setError(null);
+
+    try {
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      const response = await getGoogleAuthUrl(redirectTo);
+      window.location.assign(response.url);
+    } catch (exception) {
+      if (exception instanceof ApiError) {
+        setError(exception.message);
+      } else {
+        setError("Unable to start Google sign up right now.");
+      }
+      setGoogleLoading(false);
+    }
+  }
+
   return (
     <AuthShell
       accent="blue"
@@ -113,9 +138,11 @@ export function SignupScreen() {
 
         <button
           className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-(--brand-border) bg-white py-3.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
-          type="button">
+          type="button"
+          onClick={() => void handleGoogleSignup()}
+          disabled={googleLoading || loading}>
           <GoogleMark />
-          Sign up with Google
+          {googleLoading ? "Opening Google..." : "Sign up with Google"}
         </button>
 
         <div className="flex items-center gap-3">

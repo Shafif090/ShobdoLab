@@ -3,19 +3,14 @@ import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
-import { AppIcon, IconButton, Skeleton, TabScreen } from "@/components";
+import { AppIcon, Skeleton, TabScreen } from "@/components";
 import { stats } from "@/constants/data";
 import {
   ApiError,
   getReviseSummary,
-  startReviseSession,
   type ReviseSummaryResponse,
 } from "@/lib/api";
-import {
-  clearQuizSessionId,
-  getAccessToken,
-  saveQuizSessionId,
-} from "@/lib/session";
+import { getAccessToken } from "@/lib/session";
 
 export default function ReviseTab() {
   const [summary, setSummary] = useState<ReviseSummaryResponse | null>(null);
@@ -90,36 +85,17 @@ export default function ReviseTab() {
     },
   ] as const;
 
-  async function startRevision(type: (typeof cards)[number]["type"]) {
+  function openRevision(type: (typeof cards)[number]["type"]) {
     if (type === "recent") {
-      router.push("/learned-words");
+      router.push("/revise-words/recent");
       return;
     }
 
-    const token = await getAccessToken();
-    if (!token) {
-      router.push("/typing");
-      return;
-    }
-
-    try {
-      const response = await startReviseSession(token, {
-        type,
-        mode: "mixed",
-      });
-      await saveQuizSessionId(response.session.id);
-    } catch {
-      await clearQuizSessionId();
-    }
-
-    router.push("/typing");
+    router.push(`/revise-words/${type}`);
   }
 
   return (
-    <TabScreen
-      title="Revise"
-      active="revise"
-      right={<IconButton icon="ellipsis" />}>
+    <TabScreen title="Revise" active="revise">
       <View style={{ gap: 18 }}>
         <View style={{ paddingVertical: 16 }}>
           <Text
@@ -215,7 +191,7 @@ export default function ReviseTab() {
             </View>
 
             <Pressable
-              onPress={() => void startRevision(card.type)}
+              onPress={() => openRevision(card.type)}
               style={{
                 minHeight: 54,
                 borderRadius: 16,

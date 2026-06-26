@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
@@ -18,6 +18,9 @@ import {
 } from "@/lib/session";
 
 export default function ResultsScreen() {
+  const { sessionId: requestedSessionId } = useLocalSearchParams<{
+    sessionId?: string;
+  }>();
   const [liveResult, setLiveResult] = useState<QuizResultResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,7 +30,7 @@ export default function ResultsScreen() {
 
     async function loadResult() {
       const token = await getAccessToken();
-      const sessionId = await loadQuizSessionId();
+      const sessionId = requestedSessionId || (await loadQuizSessionId());
       if (!token || !sessionId) {
         setLoading(false);
         return;
@@ -59,7 +62,7 @@ export default function ResultsScreen() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [requestedSessionId]);
 
   const summary = liveResult?.summary;
   const score = summary ? Math.round(summary.accuracy * 100) : result.score;
@@ -73,6 +76,7 @@ export default function ResultsScreen() {
     : liveResult?.incorrectItems.map((item, index) => ({
         ...item,
         quizItemId: item.wordId,
+        wordId: item.wordId,
         questionType: "review",
         sequenceNo: index + 1,
       }));
@@ -81,6 +85,7 @@ export default function ResultsScreen() {
       ? [
           {
             quizItemId: "demo",
+            wordId: "demo",
             word: result.missedWord,
             questionType: "review",
             sequenceNo: 1,
@@ -93,7 +98,7 @@ export default function ResultsScreen() {
 
   async function handleRetry() {
     const token = await getAccessToken();
-    const sessionId = await loadQuizSessionId();
+    const sessionId = requestedSessionId || (await loadQuizSessionId());
     if (!token || !sessionId || !liveResult?.canRetry) {
       return;
     }
@@ -305,8 +310,13 @@ export default function ResultsScreen() {
           ) : quickBreakdownItems.length > 0 ? (
             <View style={{ gap: 10 }}>
               {quickBreakdownItems.map((item) => (
-                <View
+                <Pressable
                   key={item.quizItemId}
+                  onPress={() => {
+                    if (item.wordId !== "demo") {
+                      router.push(`/word/${item.wordId}`);
+                    }
+                  }}
                   style={{
                     width: "100%",
                     borderRadius: 20,
@@ -378,7 +388,7 @@ export default function ResultsScreen() {
                       {item.correctAnswer || "No accepted answer"}
                     </Text>
                   </View>
-                </View>
+                </Pressable>
               ))}
             </View>
           ) : (

@@ -1,4 +1,5 @@
 export type WordCard = {
+  wordId?: string | number;
   english: string;
   bangla: string[];
   pos: string[];
