@@ -4,7 +4,6 @@ import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, Skeleton, TabScreen } from "@/components";
-import { stats } from "@/constants/data";
 import {
   ApiError,
   getCurrentSet,
@@ -81,7 +80,7 @@ export default function ExerciseTab() {
         setLiveSet(setResponse.set);
         setMeta(metaResponse);
         setSyncMessage(
-          `Live set #${setResponse.set.set_index} with ${setResponse.set.total_words} words ready`,
+          `${setResponse.set.total_words} learned words are ready for practice.`,
         );
       } catch (exception) {
         if (!active) return;
@@ -93,7 +92,7 @@ export default function ExerciseTab() {
           return;
         }
 
-        setSyncMessage("Unable to load your live set right now.");
+        setSyncMessage("Unable to load your practice words right now.");
       } finally {
         if (active) {
           setLoading(false);
@@ -112,7 +111,7 @@ export default function ExerciseTab() {
   const modeMeta = meta?.modes[mode];
   const estimatedTime = modeMeta?.estimated ?? current.time;
   const itemCount = modeMeta ? `${modeMeta.items} Questions` : current.items;
-  const lastAccuracy = meta?.lastSessionAccuracy ?? stats.lastAccuracy;
+  const lastAccuracy = meta?.lastSessionAccuracy;
 
   async function startMode(target: "/quiz" | "/typing") {
     const token = await getAccessToken();
@@ -337,7 +336,9 @@ export default function ExerciseTab() {
             <Text style={{ color: Colors.muted, fontWeight: "600" }}>
               Last session:{" "}
               <Text style={{ color: Colors.text, fontWeight: "800" }}>
-                {lastAccuracy}% accuracy
+                {lastAccuracy === null || lastAccuracy === undefined
+                  ? "No sessions yet"
+                  : `${lastAccuracy}% accuracy`}
               </Text>
             </Text>
           )}

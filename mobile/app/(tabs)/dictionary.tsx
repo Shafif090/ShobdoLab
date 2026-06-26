@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Pressable, TextInput, View } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
-import { formatWordList } from "@/constants/data";
+import { formatWordList } from "@/lib/format";
 import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, Skeleton, TabScreen } from "@/components";
 import {

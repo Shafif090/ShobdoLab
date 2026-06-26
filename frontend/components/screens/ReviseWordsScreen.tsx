@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
-import { formatWordList } from "@/components/data";
+import { formatWordList } from "@/lib/format";
 import { Icon } from "@/components/icons";
 import { Skeleton } from "@/components/ui";
 import {

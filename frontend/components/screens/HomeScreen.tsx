@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { stats } from "@/components/data";
 import { ActionCard, ArrowDivider, Skeleton } from "@/components/ui";
 import {
   getHomeSummary,
@@ -97,8 +96,8 @@ export function HomeScreen() {
     };
   }, []);
 
-  const streakDays = summary?.streakDays ?? stats.streakDays;
-  const wordsLearned = summary?.wordsLearnedTotal ?? stats.wordsLearned;
+  const streakDays = summary?.streakDays ?? 0;
+  const wordsLearned = summary?.wordsLearnedTotal ?? 0;
   const dueTomorrow = summary?.dueTomorrowCount ?? 0;
 
   return (
@@ -132,7 +131,7 @@ export function HomeScreen() {
             />
             <ProgressStat
               icon="exercise"
-              value={summary?.today.exercise ?? stats.todayExercise}
+              value={summary?.today.exercise ?? 0}
               label="Exercises Today"
               loading={loading}
               tone="orange"

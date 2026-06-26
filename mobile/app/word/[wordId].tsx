@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/theme";
-import { formatWordList } from "@/constants/data";
+import { formatWordList } from "@/lib/format";
 import { AppText as Text } from "@/components/app-typography";
 import { AppHeader, AppIcon, Screen, Skeleton } from "@/components";
 import { ApiError, getWordDetail, type WordDetailResponse } from "@/lib/api";

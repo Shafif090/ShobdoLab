@@ -4,7 +4,7 @@ import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, IconButton, Screen, Skeleton } from "@/components";
-import { formatWordList, mcqQuestion } from "@/constants/data";
+import { formatWordList } from "@/lib/format";
 import {
   ApiError,
   finishQuizSession,
@@ -40,6 +40,9 @@ export default function QuizScreen() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const totalItems = sessionTotal || currentSet?.total_words || 0;
+  const progressPercent =
+    currentItem && totalItems > 0 ? (currentItem.sequence_no / totalItems) * 100 : 0;
 
   useEffect(() => {
     let active = true;
@@ -198,7 +201,7 @@ export default function QuizScreen() {
             }}>
             <View
               style={{
-                width: `${currentItem ? (currentItem.sequence_no / Math.max(sessionTotal || (currentSet?.total_words ?? 10), 1)) * 100 : mcqQuestion.progress * 100}%`,
+                width: `${progressPercent}%`,
                 height: "100%",
                 backgroundColor: Colors.blue,
                 borderRadius: 999,
@@ -206,8 +209,7 @@ export default function QuizScreen() {
             />
           </View>
           <Text style={{ color: "#94A3B8", fontWeight: "800" }}>
-            {currentItem?.sequence_no ?? mcqQuestion.index}/
-            {sessionTotal || (currentSet?.total_words ?? mcqQuestion.total)}
+            {currentItem?.sequence_no ?? 0}/{totalItems}
           </Text>
         </View>
 
@@ -226,7 +228,7 @@ export default function QuizScreen() {
             <Skeleton style={{ width: 190, height: 44 }} />
           ) : (
             <Text style={{ fontSize: 36, fontWeight: "800", color: Colors.text }}>
-              {currentItem?.prompt_text ?? mcqQuestion.prompt}
+              {currentItem?.prompt_text ?? "No question loaded"}
             </Text>
           )}
           <View style={{ flexDirection: "row", gap: 10 }}>

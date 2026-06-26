@@ -4,7 +4,6 @@ import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, IconButton, Skeleton, TabScreen } from "@/components";
-import { stats } from "@/constants/data";
 import { getHomeSummary, type HomeSummaryResponse } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 import Svg, { Path } from "react-native-svg";
@@ -228,8 +227,8 @@ export default function HomeTab() {
     };
   }, []);
 
-  const streakDays = summary?.streakDays ?? stats.streakDays;
-  const wordsLearned = summary?.wordsLearnedTotal ?? stats.wordsLearned;
+  const streakDays = summary?.streakDays ?? 0;
+  const wordsLearned = summary?.wordsLearnedTotal ?? 0;
 
   return (
     <TabScreen
@@ -284,7 +283,7 @@ export default function HomeTab() {
               iconColor="#DC2626"
               borderColor={Colors.orange}
               backgroundColor="rgba(244,124,124,0.12)"
-              value={summary?.today.exercise ?? stats.todayExercise}
+              value={summary?.today.exercise ?? 0}
               label="Exercises Today"
               loading={loading}
             />

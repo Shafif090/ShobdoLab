@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { stats } from "@/components/data";
 import { Skeleton } from "@/components/ui";
 import {
   ApiError,
@@ -62,7 +61,7 @@ export function ReviseScreen() {
       type: "due",
       title: "Due Today",
       subtitle: "Spaced repetition",
-      value: summary?.dueTodayCount ?? stats.dueToday,
+      value: summary?.dueTodayCount ?? 0,
       color: "orange",
       icon: "calendar",
       cta: "Revise Now",
@@ -71,7 +70,7 @@ export function ReviseScreen() {
       type: "weak",
       title: "Weak Words",
       subtitle: "Needs more practice",
-      value: summary?.weakWordsCount ?? stats.weakWords,
+      value: summary?.weakWordsCount ?? 0,
       color: "blue",
       icon: "exercise",
       cta: "Strengthen",
@@ -80,7 +79,7 @@ export function ReviseScreen() {
       type: "recent",
       title: "Recent",
       subtitle: "All learned words",
-      value: summary?.recentWordsCount ?? stats.recentWords,
+      value: summary?.recentWordsCount ?? 0,
       color: "green",
       icon: "clock",
       cta: "View Words",

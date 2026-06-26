@@ -4,7 +4,6 @@ import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppHeader, AppIcon, IconButton, Screen, Skeleton } from "@/components";
-import { result } from "@/constants/data";
 import {
   ApiError,
   getQuizResult,
@@ -65,12 +64,12 @@ export default function ResultsScreen() {
   }, [requestedSessionId]);
 
   const summary = liveResult?.summary;
-  const score = summary ? Math.round(summary.accuracy * 100) : result.score;
-  const correct = summary?.correctItems ?? result.correct;
-  const incorrect = summary?.incorrectItems ?? result.incorrect;
+  const score = summary ? Math.round(summary.accuracy * 100) : 0;
+  const correct = summary?.correctItems ?? 0;
+  const incorrect = summary?.incorrectItems ?? 0;
   const duration = liveResult?.session.duration_ms
     ? `${Math.max(1, Math.round(liveResult.session.duration_ms / 1000))}s`
-    : result.duration;
+    : "0s";
   const missedItems = liveResult?.breakdown?.length
     ? liveResult.breakdown.filter((item) => !item.isCorrect)
     : liveResult?.incorrectItems.map((item, index) => ({
@@ -80,21 +79,7 @@ export default function ResultsScreen() {
         questionType: "review",
         sequenceNo: index + 1,
       }));
-  const fallbackMissedItems =
-    !loading && !liveResult
-      ? [
-          {
-            quizItemId: "demo",
-            wordId: "demo",
-            word: result.missedWord,
-            questionType: "review",
-            sequenceNo: 1,
-            yourAnswer: result.yourAnswer,
-            correctAnswer: result.correctAnswer,
-          },
-        ]
-      : [];
-  const quickBreakdownItems = missedItems ?? fallbackMissedItems;
+  const quickBreakdownItems = missedItems ?? [];
 
   async function handleRetry() {
     const token = await getAccessToken();
@@ -313,9 +298,7 @@ export default function ResultsScreen() {
                 <Pressable
                   key={item.quizItemId}
                   onPress={() => {
-                    if (item.wordId !== "demo") {
-                      router.push(`/word/${item.wordId}`);
-                    }
+                    router.push(`/word/${item.wordId}`);
                   }}
                   style={{
                     width: "100%",
@@ -420,7 +403,7 @@ export default function ResultsScreen() {
                     fontWeight: "800",
                     color: Colors.text,
                   }}>
-                  No missed words
+                  {liveResult ? "No missed words" : "No result loaded"}
                 </Text>
                 <Text
                   style={{
@@ -428,7 +411,9 @@ export default function ResultsScreen() {
                     fontWeight: "600",
                     color: Colors.muted,
                   }}>
-                  Every answer in this session was correct.
+                  {liveResult
+                    ? "Every answer in this session was correct."
+                    : "Complete a quiz or open a result from history to see a breakdown."}
                 </Text>
               </View>
             </View>

@@ -14,7 +14,7 @@ import {
   type LearningSetResponse,
   type QuizItem,
 } from "@/lib/api";
-import { formatWordList } from "@/components/data";
+import { formatWordList } from "@/lib/format";
 import {
   getAccessToken,
   loadQuizSessionId,

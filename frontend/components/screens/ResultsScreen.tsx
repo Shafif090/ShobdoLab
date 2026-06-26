@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { result } from "@/components/data";
 import { Skeleton } from "@/components/ui";
 import {
   ApiError,
@@ -67,12 +66,12 @@ export function ResultsScreen({
   }, [requestedSessionId]);
 
   const summary = liveResult?.summary;
-  const score = summary ? Math.round(summary.accuracy * 100) : result.score;
-  const correct = summary?.correctItems ?? result.correct;
-  const incorrect = summary?.incorrectItems ?? result.incorrect;
+  const score = summary ? Math.round(summary.accuracy * 100) : 0;
+  const correct = summary?.correctItems ?? 0;
+  const incorrect = summary?.incorrectItems ?? 0;
   const duration = liveResult?.session.duration_ms
     ? `${Math.max(1, Math.round(liveResult.session.duration_ms / 1000))}s`
-    : result.duration;
+    : "0s";
   const missedItems = liveResult?.breakdown?.length
     ? liveResult.breakdown.filter((item) => !item.isCorrect)
     : liveResult?.incorrectItems.map((item, index) => ({
@@ -82,21 +81,7 @@ export function ResultsScreen({
         questionType: "review",
         sequenceNo: index + 1,
       }));
-  const fallbackMissedItems =
-    !loading && !liveResult
-      ? [
-          {
-            quizItemId: "demo",
-            wordId: "demo",
-            word: result.missedWord,
-            questionType: "review",
-            sequenceNo: 1,
-            yourAnswer: result.yourAnswer,
-            correctAnswer: result.correctAnswer,
-          },
-        ]
-      : [];
-  const quickBreakdownItems = missedItems ?? fallbackMissedItems;
+  const quickBreakdownItems = missedItems ?? [];
 
   async function handleRetry() {
     const token = getAccessToken();
@@ -277,7 +262,7 @@ export function ResultsScreen({
               {quickBreakdownItems.map((item) => (
                 <Link
                   key={item.quizItemId}
-                  href={item.wordId === "demo" ? "/results" : `/words/${item.wordId}`}
+                  href={`/words/${item.wordId}`}
                   className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
                   style={{ borderColor: "rgba(244,124,124,0.20)" }}>
                   <div
@@ -318,10 +303,12 @@ export function ResultsScreen({
               </div>
               <div className="flex-1">
                 <p className="text-sm font-extrabold text-slate-900">
-                  No missed words
+                  {liveResult ? "No missed words" : "No result loaded"}
                 </p>
                 <p className="mt-1 text-sm font-semibold text-slate-500">
-                  Every answer in this session was correct.
+                  {liveResult
+                    ? "Every answer in this session was correct."
+                    : "Complete a quiz or open a result from history to see a breakdown."}
                 </p>
               </div>
             </div>

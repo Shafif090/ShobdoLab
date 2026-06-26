@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, Skeleton, TabScreen } from "@/components";
-import { formatWordList, learnWords, type LearnWord } from "@/constants/data";
+import { formatWordList } from "@/lib/format";
 import {
   ApiError,
   createNextSet,
@@ -59,7 +59,7 @@ export default function LearnTab() {
     };
   }, []);
 
-  const liveWords: LearnWord[] =
+  const liveWords =
     currentSet?.items.flatMap((item) =>
       item.word
         ? [
@@ -71,7 +71,7 @@ export default function LearnTab() {
             },
           ]
         : [],
-    ) ?? learnWords;
+    ) ?? [];
 
   async function handleNextSet() {
     if (nextLoading) return;
@@ -127,7 +127,7 @@ export default function LearnTab() {
               ? "Loading..."
               : currentSet
                 ? `${currentSet.total_words} Words`
-                : "10 Words"}
+                : "No active set"}
           </Text>
         </View>
 
@@ -233,7 +233,8 @@ export default function LearnTab() {
                   <Skeleton style={{ width: 170, height: 24 }} />
                 </View>
               ))
-            : liveWords.map((word) => (
+            : liveWords.length > 0 ? (
+              liveWords.map((word) => (
                 <Pressable
                   key={word.english}
                   onPress={() => {
@@ -300,7 +301,31 @@ export default function LearnTab() {
                     </Text>
                   </View>
                 </Pressable>
-              ))}
+              ))
+            ) : (
+              <View
+                style={{
+                  borderRadius: 20,
+                  backgroundColor: Colors.surface,
+                  borderWidth: 1,
+                  borderColor: "rgba(148,163,184,0.22)",
+                  padding: 22,
+                  alignItems: "center",
+                }}>
+                <Text style={{ fontSize: 16, fontWeight: "800", color: Colors.text }}>
+                  No learning set loaded.
+                </Text>
+                <Text
+                  style={{
+                    marginTop: 8,
+                    color: Colors.muted,
+                    fontWeight: "600",
+                    textAlign: "center",
+                  }}>
+                  Use Next Set to load words from your database.
+                </Text>
+              </View>
+            )}
         </View>
       </View>
     </TabScreen>

@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { stats } from "@/components/data";
 import { Skeleton } from "@/components/ui";
 import {
   ApiError,
@@ -120,7 +119,7 @@ export function ExerciseScreen() {
   const modeMeta = meta?.modes[mode];
   const estimatedTime = modeMeta?.estimated ?? current.time;
   const itemCount = modeMeta ? `${modeMeta.items} Questions` : current.items;
-  const lastAccuracy = meta?.lastSessionAccuracy ?? stats.lastAccuracy;
+  const lastAccuracy = meta?.lastSessionAccuracy;
 
   return (
     <AppShell active="exercise" title="Exercise">
@@ -213,7 +212,9 @@ export function ExerciseScreen() {
               <>
                 Last session:{" "}
                 <strong className="text-slate-900">
-                  {lastAccuracy}% accuracy
+                  {lastAccuracy === null || lastAccuracy === undefined
+                    ? "No sessions yet"
+                    : `${lastAccuracy}% accuracy`}
                 </strong>
               </>
             )}

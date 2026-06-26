@@ -7,7 +7,6 @@ import {
   AppTextInput as TextInput,
 } from "@/components/app-typography";
 import { AppIcon, IconButton, Screen, Skeleton } from "@/components";
-import { typingQuestion } from "@/constants/data";
 import {
   ApiError,
   finishQuizSession,
@@ -35,6 +34,9 @@ export default function TypingScreen() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const totalItems = sessionTotal || currentSet?.total_words || 0;
+  const progressPercent =
+    currentItem && totalItems > 0 ? (currentItem.sequence_no / totalItems) * 100 : 0;
 
   useEffect(() => {
     let active = true;
@@ -169,7 +171,7 @@ export default function TypingScreen() {
             }}>
             <View
               style={{
-                width: `${currentItem ? (currentItem.sequence_no / Math.max(sessionTotal || (currentSet?.total_words ?? 10), 1)) * 100 : typingQuestion.progress * 100}%`,
+                width: `${progressPercent}%`,
                 height: "100%",
                 backgroundColor: Colors.blue,
                 borderRadius: 999,
@@ -177,8 +179,7 @@ export default function TypingScreen() {
             />
           </View>
           <Text style={{ color: "#94A3B8", fontWeight: "800" }}>
-            {currentItem?.sequence_no ?? typingQuestion.index}/
-            {sessionTotal || (currentSet?.total_words ?? typingQuestion.total)}
+            {currentItem?.sequence_no ?? 0}/{totalItems}
           </Text>
         </View>
 
@@ -197,7 +198,7 @@ export default function TypingScreen() {
             <Skeleton style={{ width: 180, height: 48 }} />
           ) : (
             <Text style={{ fontSize: 42, fontWeight: "800", color: Colors.text }}>
-              {currentItem?.prompt_text ?? typingQuestion.prompt}
+              {currentItem?.prompt_text ?? "No question loaded"}
             </Text>
           )}
           <View style={{ flexDirection: "row", gap: 10 }}>

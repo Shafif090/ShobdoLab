@@ -4,7 +4,6 @@ import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, Skeleton, TabScreen } from "@/components";
-import { stats } from "@/constants/data";
 import {
   ApiError,
   getReviseSummary,
@@ -60,7 +59,7 @@ export default function ReviseTab() {
       type: "due",
       title: "Due Today",
       subtitle: "Spaced repetition",
-      count: summary?.dueTodayCount ?? stats.dueToday,
+      count: summary?.dueTodayCount ?? 0,
       color: Colors.orange,
       icon: "calendar",
       action: "Revise Now",
@@ -69,7 +68,7 @@ export default function ReviseTab() {
       type: "weak",
       title: "Weak Words",
       subtitle: "Needs more practice",
-      count: summary?.weakWordsCount ?? stats.weakWords,
+      count: summary?.weakWordsCount ?? 0,
       color: Colors.blue,
       icon: "exercise",
       action: "Strengthen",
@@ -78,7 +77,7 @@ export default function ReviseTab() {
       type: "recent",
       title: "Recent",
       subtitle: "All learned words",
-      count: summary?.recentWordsCount ?? stats.recentWords,
+      count: summary?.recentWordsCount ?? 0,
       color: Colors.green,
       icon: "clock",
       action: "View Words",

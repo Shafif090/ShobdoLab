@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { formatWordList, learnWords } from "@/components/data";
+import { formatWordList } from "@/lib/format";
 import { Skeleton } from "@/components/ui";
 import {
   ApiError,
@@ -72,7 +72,7 @@ export function LearnScreen() {
             },
           ]
         : [],
-    ) ?? learnWords;
+    ) ?? [];
 
   async function handleNextSet() {
     if (nextLoading) return;
@@ -122,7 +122,7 @@ export function LearnScreen() {
                   ? "Loading..."
                   : currentSet
                     ? `${currentSet.total_words} Words`
-                    : "10 Words"}
+                    : "No active set"}
               </p>
             </div>
           </div>
@@ -182,7 +182,8 @@ export function LearnScreen() {
                   </div>
                 </div>
               ))
-            : liveWords.map((word) => {
+            : liveWords.length > 0
+              ? liveWords.map((word) => {
                 const card = (
                   <>
                     <div className="mb-2 flex items-start justify-between gap-3">
@@ -215,7 +216,17 @@ export function LearnScreen() {
                     {card}
                   </div>
                 );
-              })}
+              })
+              : (
+                <div className="rounded-[20px] border border-slate-200 bg-white p-6 text-center shadow-soft md:col-span-2">
+                  <p className="font-extrabold text-slate-900">
+                    No learning set loaded.
+                  </p>
+                  <p className="mt-2 text-sm font-medium text-slate-500">
+                    Use Next Set to load words from your database.
+                  </p>
+                </div>
+              )}
         </div>
       </div>
     </AppShell>

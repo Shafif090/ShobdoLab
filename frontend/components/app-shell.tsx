@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Icon } from "./icons";
-import { stats } from "./data";
 import { getHomeSummary } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
@@ -40,7 +39,7 @@ export function AppShell({
   children: ReactNode;
 }) {
   const router = useRouter();
-  const [streakDays, setStreakDays] = useState(stats.streakDays);
+  const [streakDays, setStreakDays] = useState(0);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -62,7 +61,7 @@ export function AppShell({
         setStreakDays(response.streakDays);
       } catch {
         if (!active) return;
-        setStreakDays(stats.streakDays);
+        setStreakDays(0);
       }
     }
 
