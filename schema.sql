@@ -16,6 +16,7 @@ CREATE TABLE words (
 );
 
 CREATE INDEX idx_words_family_id ON words(family_id);
+CREATE INDEX idx_words_active_root ON words(is_active, root);
 
 
 -- ── 2. USERS ──────────────────────────────────────────────────

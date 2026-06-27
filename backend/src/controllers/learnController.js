@@ -1,10 +1,13 @@
+import { randomInt } from "node:crypto";
 import { supabase } from "../lib/supabaseClient.js";
+import { nextReviewAtForStrength } from "./progressEngine.js";
 import {
   createQuizSessionFromWords,
   getWordsByIds,
 } from "./quizSessionBuilder.js";
 
-const DEFAULT_SET_SIZE = 10;
+const MIN_LEARNING_SET_SIZE = 10;
+const WORD_PAGE_SIZE = 1000;
 const SET_EXPIRES_IN_DAYS = 7;
 
 function jsonError(res, status, code, message, details = null) {
@@ -19,6 +22,20 @@ function jsonError(res, status, code, message, details = null) {
 
 function addDays(days) {
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+}
+
+function shuffle(items) {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [shuffled[index], shuffled[swapIndex]] = [
+      shuffled[swapIndex],
+      shuffled[index],
+    ];
+  }
+
+  return shuffled;
 }
 
 async function getLatestSetIndex(db, userId) {
@@ -89,164 +106,104 @@ async function getLearningSetWithItems(db, setRow) {
   };
 }
 
-async function chooseWordsForSet(
-  db,
-  userId,
-  desiredCount = DEFAULT_SET_SIZE,
-  excludedIds = [],
-) {
+async function loadActiveWords(db) {
+  const words = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + WORD_PAGE_SIZE - 1;
+    const { data, error } = await db
+      .from("words")
+      .select("id, english, bangla, pos, root, family_id, is_active")
+      .eq("is_active", true)
+      .order("id", { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    words.push(...(data || []));
+
+    if (!data || data.length < WORD_PAGE_SIZE) {
+      break;
+    }
+
+    from += WORD_PAGE_SIZE;
+  }
+
+  return words;
+}
+
+async function chooseWordsForSet(db, userId, excludedIds = []) {
   const { data: userWords, error: userWordsError } = await db
     .from("user_words")
-    .select("word_id, status, strength, mistakes, seen_count, next_review_at")
+    .select("word_id")
     .eq("user_id", userId);
 
   if (userWordsError) {
     throw userWordsError;
   }
 
-  const excluded = new Set(excludedIds);
-  const seenWordIds = new Set((userWords || []).map((row) => row.word_id));
+  const blockedIds = new Set([
+    ...(userWords || []).map((row) => row.word_id),
+    ...excludedIds,
+  ]);
+
+  const activeWords = await loadActiveWords(db);
+  const eligibleWords = activeWords.filter((word) => !blockedIds.has(word.id));
+
+  const wordsByRoot = new Map();
+  for (const word of eligibleWords) {
+    const rootKey = word.root || `word:${word.id}`;
+    const rootWords = wordsByRoot.get(rootKey) || [];
+    rootWords.push(word);
+    wordsByRoot.set(rootKey, rootWords);
+  }
+
   const selectedWords = [];
-  const blockedIds = [...new Set([...seenWordIds, ...excluded])];
+  for (const rootGroup of shuffle([...wordsByRoot.values()])) {
+    selectedWords.push(...rootGroup);
 
-  let unseenQuery = db
-    .from("words")
-    .select("id, english, bangla, pos, root, family_id, is_active")
-    .eq("is_active", true)
-    .order("family_id", { ascending: true })
-    .order("id", { ascending: true });
-
-  if (blockedIds.length > 0) {
-    unseenQuery = unseenQuery.not("id", "in", `(${blockedIds.join(",")})`);
-  }
-
-  const { data: unseenWords, error: unseenError } = await unseenQuery;
-  if (unseenError) {
-    throw unseenError;
-  }
-
-  const unseenByFamily = new Map();
-  for (const word of unseenWords || []) {
-    const familyKey = word.family_id || `word:${word.id}`;
-    const familyWords = unseenByFamily.get(familyKey) || [];
-    familyWords.push(word);
-    unseenByFamily.set(familyKey, familyWords);
-  }
-
-  const familyGroups = [...unseenByFamily.entries()]
-    .map(([familyId, words]) => ({ familyId, words }))
-    .sort((left, right) => {
-      const rightCanFill = right.words.length >= desiredCount ? 1 : 0;
-      const leftCanFill = left.words.length >= desiredCount ? 1 : 0;
-      if (leftCanFill !== rightCanFill) return rightCanFill - leftCanFill;
-      if (right.words.length !== left.words.length) {
-        return right.words.length - left.words.length;
-      }
-      return String(left.familyId).localeCompare(String(right.familyId));
-    });
-
-  const primaryFamily = familyGroups[0];
-  if (primaryFamily) {
-    selectedWords.push(...primaryFamily.words.slice(0, desiredCount));
-  }
-
-  if (selectedWords.length < desiredCount) {
-    const selectedIds = new Set(selectedWords.map((word) => word.id));
-    const remainingUnseen = (unseenWords || []).filter(
-      (word) => !selectedIds.has(word.id),
-    );
-    selectedWords.push(
-      ...remainingUnseen.slice(0, desiredCount - selectedWords.length),
-    );
-  }
-
-  if (selectedWords.length >= desiredCount) {
-    return selectedWords.slice(0, desiredCount);
-  }
-
-  const statusRank = {
-    learning: 0,
-    review: 1,
-    mastered: 2,
-  };
-
-  const prioritizedUserWords = [...(userWords || [])].sort((left, right) => {
-    const leftStatus = statusRank[left.status] ?? 99;
-    const rightStatus = statusRank[right.status] ?? 99;
-
-    if (leftStatus !== rightStatus) return leftStatus - rightStatus;
-
-    const leftReview = left.next_review_at
-      ? new Date(left.next_review_at).getTime()
-      : 0;
-    const rightReview = right.next_review_at
-      ? new Date(right.next_review_at).getTime()
-      : 0;
-    if (leftReview !== rightReview) return leftReview - rightReview;
-
-    if (left.strength !== right.strength) return left.strength - right.strength;
-
-    return left.seen_count - right.seen_count;
-  });
-
-  const selectedWordIds = prioritizedUserWords
-    .filter((row) => !excluded.has(row.word_id))
-    .slice(0, desiredCount - selectedWords.length)
-    .map((row) => row.word_id);
-
-  if (selectedWordIds.length > 0) {
-    const { data: words, error: selectedWordsError } = await db
-      .from("words")
-      .select("id, english, bangla, pos, root, family_id, is_active")
-      .eq("is_active", true)
-      .in("id", selectedWordIds);
-
-    if (selectedWordsError) {
-      throw selectedWordsError;
-    }
-
-    const byId = new Map(words.map((word) => [word.id, word]));
-    for (const wordId of selectedWordIds) {
-      const word = byId.get(wordId);
-      if (word) selectedWords.push(word);
+    if (selectedWords.length >= MIN_LEARNING_SET_SIZE) {
+      break;
     }
   }
 
-  if (selectedWords.length < desiredCount) {
-    const excludedFallbackIds = [
-      ...new Set([...selectedWords.map((word) => word.id), ...excluded]),
-    ];
-    let query = db
-      .from("words")
-      .select("id, english, bangla, pos, root, family_id, is_active")
-      .eq("is_active", true)
-      .order("id", { ascending: true })
-      .limit(desiredCount - selectedWords.length);
+  return selectedWords;
+}
 
-    if (excludedFallbackIds.length > 0) {
-      query = query.not("id", "in", `(${excludedFallbackIds.join(",")})`);
-    }
-
-    const { data: fallbackWords, error: fallbackError } = await query;
-
-    if (fallbackError) {
-      throw fallbackError;
-    }
-
-    selectedWords.push(...(fallbackWords || []));
+async function registerLearningSetWords(db, userId, words) {
+  if (words.length === 0) {
+    return;
   }
 
-  return selectedWords.slice(0, desiredCount);
+  const now = new Date();
+  const rows = words.map((word) => ({
+    user_id: userId,
+    word_id: word.id,
+    status: "learning",
+    strength: 0,
+    mistakes: 0,
+    correct_count: 0,
+    seen_count: 0,
+    last_seen_at: null,
+    next_review_at: nextReviewAtForStrength(0, now),
+    updated_at: now.toISOString(),
+  }));
+
+  const { error } = await db
+    .from("user_words")
+    .upsert(rows, { onConflict: "user_id,word_id", ignoreDuplicates: true });
+
+  if (error) {
+    throw error;
+  }
 }
 
 async function createLearningSet(db, userId, excludedIds = []) {
   const latestSetIndex = await getLatestSetIndex(db, userId);
-  const words = await chooseWordsForSet(
-    db,
-    userId,
-    DEFAULT_SET_SIZE,
-    excludedIds,
-  );
+  const words = await chooseWordsForSet(db, userId, excludedIds);
 
   if (words.length === 0) {
     return null;
@@ -286,6 +243,8 @@ async function createLearningSet(db, userId, excludedIds = []) {
     throw itemsError;
   }
 
+  await registerLearningSetWords(db, userId, words);
+
   return getLearningSetWithItems(db, setRow);
 }
 
@@ -320,6 +279,12 @@ export async function getCurrentSet(req, res) {
     const hydratedSet = currentSet.items
       ? currentSet
       : await getLearningSetWithItems(db, currentSet);
+
+    await registerLearningSetWords(
+      db,
+      req.userId,
+      hydratedSet.items.flatMap((item) => (item.word ? [item.word] : [])),
+    );
 
     return res.json({
       setId: hydratedSet.id,
@@ -364,7 +329,9 @@ export async function createNextSet(req, res) {
 
       await db
         .from("learning_sets")
-        .update({ state: activeSet.state === "in_quiz" ? "completed" : "expired" })
+        .update({
+          state: activeSet.state === "in_quiz" ? "completed" : "expired",
+        })
         .eq("id", activeSet.id)
         .eq("user_id", req.userId);
     }
