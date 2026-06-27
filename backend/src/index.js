@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes.js";
+import achievementRoutes from "./routes/achievementRoutes.js";
 import exerciseRoutes from "./routes/exerciseRoutes.js";
 import homeRoutes from "./routes/homeRoutes.js";
 import learnRoutes from "./routes/learnRoutes.js";
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/v1/auth", authRoutes);
+app.use("/v1/achievements", achievementRoutes);
 app.use("/v1/home", homeRoutes);
 app.use("/v1/learn", learnRoutes);
 app.use("/v1/quiz", quizRoutes);

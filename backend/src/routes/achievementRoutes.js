@@ -1,11 +1,10 @@
 import { Router } from "express";
-import { getHomeHeader, getHomeSummary } from "../controllers/homeController.js";
+import { getAchievements } from "../controllers/achievementController.js";
 import { requireUserId } from "../middleware/requireUserId.js";
 
 const router = Router();
 
 router.use(requireUserId);
-router.get("/header", getHomeHeader);
-router.get("/summary", getHomeSummary);
+router.get("/", getAchievements);
 
 export default router;

@@ -121,19 +121,28 @@ export type HomeSummaryResponse = {
   };
   dueTomorrowCount: number;
   unreadNotifications: number;
+};
+
+export type HomeHeaderResponse = {
+  streakDays: number;
+};
+
+export type AchievementItem = {
+  code: string;
+  title: string;
+  description: string;
+  earned: boolean;
+  awardedAt: string | null;
+  progress: number;
+  target: number;
+};
+
+export type AchievementsResponse = {
   latestAchievement: {
     title: string | null;
     awardedAt: string;
   } | null;
-  achievements: Array<{
-    code: string;
-    title: string;
-    description: string;
-    earned: boolean;
-    awardedAt: string | null;
-    progress: number;
-    target: number;
-  }>;
+  achievements: AchievementItem[];
 };
 
 export type ReviseSummaryResponse = {
@@ -316,6 +325,18 @@ export async function createOAuthSession(input: OAuthSessionInput) {
 
 export async function getHomeSummary(token: string) {
   return request<HomeSummaryResponse>("/v1/home/summary", {
+    token,
+  });
+}
+
+export async function getHomeHeader(token: string) {
+  return request<HomeHeaderResponse>("/v1/home/header", {
+    token,
+  });
+}
+
+export async function getAchievements(token: string) {
+  return request<AchievementsResponse>("/v1/achievements", {
     token,
   });
 }

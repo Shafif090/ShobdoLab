@@ -4,11 +4,15 @@ import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 import { AppHeader, AppIcon, Screen, Skeleton } from "@/components";
-import { ApiError, getHomeSummary, type HomeSummaryResponse } from "@/lib/api";
+import {
+  ApiError,
+  getAchievements,
+  type AchievementsResponse,
+} from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
 export default function AchievementsScreen() {
-  const [summary, setSummary] = useState<HomeSummaryResponse | null>(null);
+  const [summary, setSummary] = useState<AchievementsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,7 +27,7 @@ export default function AchievementsScreen() {
       }
 
       try {
-        const response = await getHomeSummary(token);
+        const response = await getAchievements(token);
         if (!active) return;
 
         setSummary(response);

@@ -4,10 +4,7 @@ import { useEffect, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
 import { ActionCard, ArrowDivider, Skeleton } from "@/components/ui";
-import {
-  getHomeSummary,
-  type HomeSummaryResponse,
-} from "@/lib/api";
+import { getHomeSummary, type HomeSummaryResponse } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
 function ProgressStat({
@@ -96,9 +93,9 @@ export function HomeScreen() {
     };
   }, []);
 
-  const streakDays = summary?.streakDays ?? 0;
   const wordsLearned = summary?.wordsLearnedTotal ?? 0;
   const dueTomorrow = summary?.dueTomorrowCount ?? 0;
+  const streakDays = summary?.streakDays ?? 0;
 
   return (
     <AppShell active="home" title="Home">

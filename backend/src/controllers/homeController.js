@@ -1,5 +1,4 @@
 import { supabase } from "../lib/supabaseClient.js";
-import { syncAchievementsForUser } from "./achievementEngine.js";
 
 function jsonError(res, status, code, message, details = null) {
   return res.status(status).json({
@@ -39,6 +38,32 @@ async function getExactCount(query) {
   return count ?? 0;
 }
 
+export async function getHomeHeader(req, res) {
+  try {
+    const db = req.supabase || supabase;
+    const { data: userRow, error } = await db
+      .from("users")
+      .select("streak_days")
+      .eq("id", req.userId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return res.json({
+      streakDays: userRow?.streak_days ?? 0,
+    });
+  } catch (error) {
+    return jsonError(
+      res,
+      500,
+      "HOME_HEADER_FAILED",
+      error.message || "Failed to load home header.",
+    );
+  }
+}
+
 export async function getHomeSummary(req, res) {
   try {
     const db = req.supabase || supabase;
@@ -63,38 +88,39 @@ export async function getHomeSummary(req, res) {
 
     const timezone = userRow?.timezone || "UTC";
     const today = dateInTimezone(now, timezone);
-
-    const { data: dailyStats, error: dailyStatsError } = await db
-      .from("daily_user_stats")
-      .select("learned_count, revised_count, exercise_count")
-      .eq("user_id", req.userId)
-      .eq("stat_date", today)
-      .maybeSingle();
-
-    if (dailyStatsError) {
-      throw dailyStatsError;
-    }
-
     const tomorrow = dateInTimezone(addDays(now, 1), timezone);
     const dayAfterTomorrow = dateInTimezone(addDays(now, 2), timezone);
-    const dueTomorrowCount = await getExactCount(
-      db
-        .from("user_words")
-        .select("word_id", { count: "exact", head: true })
-        .eq("user_id", req.userId)
-        .gte("next_review_at", `${tomorrow}T00:00:00.000Z`)
-        .lt("next_review_at", `${dayAfterTomorrow}T00:00:00.000Z`),
-    );
 
-    const unreadNotifications = await getExactCount(
-      db
-        .from("notifications")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", req.userId)
-        .eq("is_read", false),
-    );
+    const [dailyStatsResult, dueTomorrowCount, unreadNotifications] =
+      await Promise.all([
+        db
+          .from("daily_user_stats")
+          .select("learned_count, revised_count, exercise_count")
+          .eq("user_id", req.userId)
+          .eq("stat_date", today)
+          .maybeSingle(),
+        getExactCount(
+          db
+            .from("user_words")
+            .select("word_id", { count: "exact", head: true })
+            .eq("user_id", req.userId)
+            .gte("next_review_at", `${tomorrow}T00:00:00.000Z`)
+            .lt("next_review_at", `${dayAfterTomorrow}T00:00:00.000Z`),
+        ),
+        getExactCount(
+          db
+            .from("notifications")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", req.userId)
+            .eq("is_read", false),
+        ),
+      ]);
 
-    const achievementSnapshot = await syncAchievementsForUser(db, req.userId);
+    if (dailyStatsResult.error) {
+      throw dailyStatsResult.error;
+    }
+
+    const dailyStats = dailyStatsResult.data;
 
     return res.json({
       streakDays: userRow?.streak_days ?? 0,
@@ -106,8 +132,6 @@ export async function getHomeSummary(req, res) {
       },
       dueTomorrowCount,
       unreadNotifications,
-      latestAchievement: achievementSnapshot.latestAchievement,
-      achievements: achievementSnapshot.achievements,
     });
   } catch (error) {
     return jsonError(

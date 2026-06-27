@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
 import { Skeleton } from "@/components/ui";
-import { ApiError, getHomeSummary, type HomeSummaryResponse } from "@/lib/api";
+import {
+  ApiError,
+  getAchievements,
+  type AchievementsResponse,
+} from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
 export function AchievementsScreen() {
   const router = useRouter();
-  const [summary, setSummary] = useState<HomeSummaryResponse | null>(null);
+  const [summary, setSummary] = useState<AchievementsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,7 +29,7 @@ export function AchievementsScreen() {
       }
 
       try {
-        const response = await getHomeSummary(token);
+        const response = await getAchievements(token);
         if (!active) return;
 
         setSummary(response);

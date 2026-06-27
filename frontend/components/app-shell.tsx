@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { Icon } from "./icons";
-import { getHomeSummary } from "@/lib/api";
+import { getHomeHeader } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
 type NavKey = "home" | "learn" | "revise" | "exercise" | "dictionary";
@@ -55,7 +55,7 @@ export function AppShell({
       setAuthChecked(true);
 
       try {
-        const response = await getHomeSummary(token);
+        const response = await getHomeHeader(token);
         if (!active) return;
 
         setStreakDays(response.streakDays);
