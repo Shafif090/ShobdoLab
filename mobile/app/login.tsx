@@ -208,6 +208,14 @@ export default function LoginScreen() {
         />
 
         <Text style={{ textAlign: "center", color: Colors.muted }}>
+          <Text
+            style={{ color: Colors.blue, fontWeight: "800" }}
+            onPress={() => router.push("/forgot-password" as never)}>
+            Forgot password?
+          </Text>
+        </Text>
+
+        <Text style={{ textAlign: "center", color: Colors.muted }}>
           Don&apos;t have an account?{" "}
           <Text
             style={{ color: Colors.blue, fontWeight: "800" }}

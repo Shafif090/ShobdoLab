@@ -67,6 +67,30 @@ export default function ResultsScreen() {
   const score = summary ? Math.round(summary.accuracy * 100) : 0;
   const correct = summary?.correctItems ?? 0;
   const incorrect = summary?.incorrectItems ?? 0;
+  const nextSetGate = liveResult?.nextSetGate ?? null;
+  const isNextSetGate = Boolean(nextSetGate);
+  const gatePassed = Boolean(nextSetGate?.passed);
+  const gateCanRetry = Boolean(liveResult?.canRetry);
+  const resultColor = isNextSetGate
+    ? gatePassed
+      ? "#16A34A"
+      : Colors.orange
+    : Colors.orange;
+  const scoreColor = isNextSetGate
+    ? gatePassed
+      ? "#16A34A"
+      : Colors.orange
+    : Colors.blue;
+  const primaryActionLabel = isNextSetGate
+    ? gatePassed || !gateCanRetry
+      ? "Go to Learn"
+      : "Try Again"
+    : "Test Again";
+  const primaryActionIcon = primaryActionLabel === "Go to Learn"
+    ? "arrow"
+    : "revise";
+  const primaryActionDisabled =
+    loading || !liveResult || (!isNextSetGate && !liveResult.canRetry);
   const duration = liveResult?.session.duration_ms
     ? `${Math.max(1, Math.round(liveResult.session.duration_ms / 1000))}s`
     : "0s";
@@ -102,14 +126,30 @@ export default function ResultsScreen() {
     }
   }
 
+  function handlePrimaryAction() {
+    if (!isNextSetGate) {
+      void handleRetry();
+      return;
+    }
+
+    if (!gatePassed && gateCanRetry) {
+      void handleRetry();
+      return;
+    }
+
+    router.push("/(tabs)/learn");
+  }
+
   return (
     <Screen>
       <AppHeader
-        title="Results"
+        title={isNextSetGate ? "Next Set Check" : "Results"}
         left={
           <IconButton
             icon="back"
-            onPress={() => router.push("/(tabs)/exercise")}
+            onPress={() =>
+              router.push(isNextSetGate ? "/(tabs)/learn" : "/(tabs)/exercise")
+            }
           />
         }
         right={<IconButton icon="share" />}
@@ -122,10 +162,14 @@ export default function ResultsScreen() {
             fontSize: 42,
             lineHeight: 42,
             fontWeight: "800",
-            color: Colors.orange,
+            color: resultColor,
             textTransform: "uppercase",
           }}>
-          Quiz{"\n"}Complete!
+          {isNextSetGate
+            ? gatePassed
+              ? "Next Set\nUnlocked"
+              : "Set Check\nNeeded"
+            : "Quiz\nComplete!"}
         </Text>
 
         <View style={{ alignItems: "center", justifyContent: "center" }}>
@@ -134,12 +178,12 @@ export default function ResultsScreen() {
               width: 164,
               height: 164,
               borderRadius: 82,
-              backgroundColor: Colors.blue,
+              backgroundColor: scoreColor,
               alignItems: "center",
               justifyContent: "center",
               borderWidth: 4,
               borderColor: "#FFFFFF",
-              shadowColor: Colors.blue,
+              shadowColor: scoreColor,
               shadowOffset: { width: 0, height: 10 },
               shadowOpacity: 0.3,
               shadowRadius: 22,
@@ -189,6 +233,63 @@ export default function ResultsScreen() {
             )}
           </View>
         </View>
+
+        {isNextSetGate ? (
+          <View
+            style={{
+              width: "100%",
+              borderRadius: 20,
+              borderWidth: 2,
+              borderColor: gatePassed
+                ? "rgba(22,163,74,0.28)"
+                : "rgba(244,124,124,0.28)",
+              backgroundColor: gatePassed
+                ? "rgba(22,163,74,0.08)"
+                : "rgba(244,124,124,0.08)",
+              padding: 16,
+              flexDirection: "row",
+              gap: 12,
+            }}>
+            <View
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                backgroundColor: gatePassed ? "#16A34A" : Colors.orange,
+                alignItems: "center",
+                justifyContent: "center",
+              }}>
+              <AppIcon
+                name={gatePassed ? "check" : "close"}
+                size={14}
+                color="#FFFFFF"
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text
+                style={{
+                  color: Colors.text,
+                  fontSize: 16,
+                  fontWeight: "800",
+                }}>
+                {nextSetGate?.statusText}
+              </Text>
+              <Text
+                style={{
+                  marginTop: 6,
+                  color: Colors.muted,
+                  fontWeight: "700",
+                  lineHeight: 20,
+                }}>
+                {`You scored ${score}%. ${
+                  gatePassed
+                    ? "Return to Learn to load your next random set."
+                    : `Score ${nextSetGate?.passPercent ?? 75}% or more to unlock the next set.`
+                }`}
+              </Text>
+            </View>
+          </View>
+        ) : null}
 
         {error ? (
           <Text style={{ color: "#DC2626", fontSize: 12, fontWeight: "700" }}>
@@ -421,24 +522,27 @@ export default function ResultsScreen() {
         </View>
 
         <Pressable
-          onPress={() => void handleRetry()}
-          disabled={!liveResult?.canRetry}
+          onPress={handlePrimaryAction}
+          disabled={primaryActionDisabled}
           style={{
             width: "100%",
             minHeight: 58,
             borderRadius: 18,
-            backgroundColor: Colors.blue,
+            backgroundColor:
+              isNextSetGate && !gatePassed && gateCanRetry
+                ? Colors.orange
+                : Colors.blue,
             alignItems: "center",
             justifyContent: "center",
             flexDirection: "row",
             gap: 8,
             marginTop: 8,
-            opacity: liveResult?.canRetry ? 1 : 0.65,
+            opacity: primaryActionDisabled ? 0.65 : 1,
           }}>
           <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "800" }}>
-            Test Again
+            {primaryActionLabel}
           </Text>
-          <AppIcon name="revise" size={16} color="#FFFFFF" />
+          <AppIcon name={primaryActionIcon} size={16} color="#FFFFFF" />
         </Pressable>
       </View>
     </Screen>

@@ -88,10 +88,9 @@ export async function getHomeSummary(req, res) {
 
     const timezone = userRow?.timezone || "UTC";
     const today = dateInTimezone(now, timezone);
-    const tomorrow = dateInTimezone(addDays(now, 1), timezone);
-    const dayAfterTomorrow = dateInTimezone(addDays(now, 2), timezone);
+    const nowIso = now.toISOString();
 
-    const [dailyStatsResult, dueTomorrowCount, unreadNotifications] =
+    const [dailyStatsResult, dueTodayCount, unreadNotifications] =
       await Promise.all([
         db
           .from("daily_user_stats")
@@ -104,8 +103,7 @@ export async function getHomeSummary(req, res) {
             .from("user_words")
             .select("word_id", { count: "exact", head: true })
             .eq("user_id", req.userId)
-            .gte("next_review_at", `${tomorrow}T00:00:00.000Z`)
-            .lt("next_review_at", `${dayAfterTomorrow}T00:00:00.000Z`),
+            .lte("next_review_at", nowIso),
         ),
         getExactCount(
           db
@@ -130,7 +128,7 @@ export async function getHomeSummary(req, res) {
         revised: dailyStats?.revised_count ?? 0,
         exercise: dailyStats?.exercise_count ?? 0,
       },
-      dueTomorrowCount,
+      dueTodayCount,
       unreadNotifications,
     });
   } catch (error) {

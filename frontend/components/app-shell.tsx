@@ -84,7 +84,7 @@ export function AppShell({
         color: "var(--brand-text)",
       }}>
       <aside
-        className="hidden h-screen w-64 shrink-0 flex-col border-r bg-white md:flex lg:w-72"
+        className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-y-auto border-r bg-white md:flex lg:w-72"
         style={{ borderColor: "var(--brand-border)" }}>
         <div className="flex h-full flex-col gap-6 p-6">
           <Link href="/home" className="flex items-center gap-3 pt-2">
@@ -142,7 +142,7 @@ export function AppShell({
 
       <div className="flex min-h-screen flex-1 flex-col">
         <header
-          className="sticky top-0 z-50 flex items-center justify-between border-b bg-white/85 px-6 pb-4 pt-12 backdrop-blur md:px-10 md:pt-6"
+          className="sticky top-0 z-50 flex items-center justify-between border-b bg-white/85 px-5 pb-4 pt-12 backdrop-blur sm:px-6 md:px-10 md:pt-6"
           style={{ borderColor: "var(--brand-border)" }}>
           <h1 className="text-xl font-bold tracking-tight md:text-2xl">
             {title}
@@ -159,11 +159,11 @@ export function AppShell({
           )}
         </header>
 
-        <main className="flex-1 px-6 pb-28 pt-6 md:px-10 md:pb-12">
-          <div className="mx-auto w-full max-w-5xl">{children}</div>
+        <main className="flex-1 px-5 pb-28 pt-5 sm:px-6 sm:pt-6 md:px-10 md:pb-12 md:pt-8">
+          <div className="mx-auto w-full max-w-6xl">{children}</div>
         </main>
 
-        <nav className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between border-t border-slate-100 bg-white px-6 pb-8 pt-4 md:hidden">
+        <nav className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-between border-t border-slate-100 bg-white px-5 pb-7 pt-3 md:hidden">
           {navItems.map((item) => {
             const isActive = item.key === active;
             return (

@@ -69,6 +69,30 @@ export function ResultsScreen({
   const score = summary ? Math.round(summary.accuracy * 100) : 0;
   const correct = summary?.correctItems ?? 0;
   const incorrect = summary?.incorrectItems ?? 0;
+  const nextSetGate = liveResult?.nextSetGate ?? null;
+  const isNextSetGate = Boolean(nextSetGate);
+  const gatePassed = Boolean(nextSetGate?.passed);
+  const gateCanRetry = Boolean(liveResult?.canRetry);
+  const resultColor = isNextSetGate
+    ? gatePassed
+      ? "#16A34A"
+      : "var(--brand-orange)"
+    : "var(--brand-orange)";
+  const scoreColor = isNextSetGate
+    ? gatePassed
+      ? "#16A34A"
+      : "var(--brand-orange)"
+    : "var(--brand-blue)";
+  const primaryActionLabel = isNextSetGate
+    ? gatePassed || !gateCanRetry
+      ? "Go to Learn"
+      : "Try Again"
+    : "Test Again";
+  const primaryActionIcon = primaryActionLabel === "Go to Learn"
+    ? "arrowRight"
+    : "revise";
+  const primaryActionDisabled =
+    loading || !liveResult || (!isNextSetGate && !liveResult.canRetry);
   const duration = liveResult?.session.duration_ms
     ? `${Math.max(1, Math.round(liveResult.session.duration_ms / 1000))}s`
     : "0s";
@@ -104,13 +128,27 @@ export function ResultsScreen({
     }
   }
 
+  function handlePrimaryAction() {
+    if (!isNextSetGate) {
+      void handleRetry();
+      return;
+    }
+
+    if (!gatePassed && gateCanRetry) {
+      void handleRetry();
+      return;
+    }
+
+    window.location.href = "/learn";
+  }
+
   return (
     <AppShell
-      active="exercise"
-      title="Results"
+      active={isNextSetGate ? "learn" : "exercise"}
+      title={isNextSetGate ? "Next Set Check" : "Results"}
       headerAction={
         <div className="flex items-center gap-3">
-          <Link href="/exercise" className="icon-button">
+          <Link href={isNextSetGate ? "/learn" : "/exercise"} className="icon-button">
             <Icon name="back" className="text-sm" />
           </Link>
           <button className="icon-button" type="button">
@@ -143,10 +181,28 @@ export function ResultsScreen({
         <div className="mt-4 flex flex-col items-center justify-center">
           <h2
             className="text-center text-[2.5rem] font-black uppercase leading-none tracking-[-0.06em]"
-            style={{ color: "var(--brand-orange)" }}>
-            Quiz
-            <br />
-            Complete!
+            style={{ color: resultColor }}>
+            {isNextSetGate ? (
+              gatePassed ? (
+                <>
+                  Next Set
+                  <br />
+                  Unlocked
+                </>
+              ) : (
+                <>
+                  Set Check
+                  <br />
+                  Needed
+                </>
+              )
+            ) : (
+              <>
+                Quiz
+                <br />
+                Complete!
+              </>
+            )}
           </h2>
           <div className="relative mb-4 mt-8">
             <div
@@ -159,7 +215,7 @@ export function ResultsScreen({
             />
             <div
               className="wavy-blob relative z-10 flex h-40 w-40 flex-col items-center justify-center border-4 border-white shadow-[0_8px_30px_-4px_rgba(142,155,250,0.6)]"
-              style={{ backgroundColor: "var(--brand-blue)" }}>
+              style={{ backgroundColor: scoreColor }}>
               {loading ? (
                 <Skeleton className="h-14 w-24 bg-white/40" />
               ) : (
@@ -185,6 +241,36 @@ export function ResultsScreen({
             </div>
           </div>
         </div>
+
+        {isNextSetGate ? (
+          <div
+            className="flex items-start gap-4 rounded-[20px] border-2 bg-white p-4 shadow-soft"
+            style={{
+              borderColor: gatePassed
+                ? "rgba(22,163,74,0.28)"
+                : "rgba(244,124,124,0.28)",
+              backgroundColor: gatePassed
+                ? "rgba(22,163,74,0.08)"
+                : "rgba(244,124,124,0.08)",
+            }}>
+            <div
+              className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white"
+              style={{ backgroundColor: gatePassed ? "#16A34A" : "var(--brand-orange)" }}>
+              <Icon name={gatePassed ? "check" : "close"} className="text-sm" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-black text-slate-900">
+                {nextSetGate?.statusText}
+              </p>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                You scored {score}%.{" "}
+                {gatePassed
+                  ? "Return to Learn to load your next random set."
+                  : `Score ${nextSetGate?.passPercent ?? 75}% or more to unlock the next set.`}
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         {error ? (
           <p className="text-center text-sm font-semibold text-red-500">
@@ -317,12 +403,17 @@ export function ResultsScreen({
 
         <button
           type="button"
-          onClick={() => void handleRetry()}
-          disabled={!liveResult?.canRetry}
+          onClick={handlePrimaryAction}
+          disabled={primaryActionDisabled}
           className="primary-button mt-4 text-lg text-white shadow-[0_8px_20px_-4px_rgba(142,155,250,0.45)]"
-          style={{ backgroundColor: "var(--brand-blue)" }}>
-          <span>Test Again</span>
-          <Icon name="revise" className="text-sm" />
+          style={{
+            backgroundColor:
+              isNextSetGate && !gatePassed && gateCanRetry
+                ? "var(--brand-orange)"
+                : "var(--brand-blue)",
+          }}>
+          <span>{primaryActionLabel}</span>
+          <Icon name={primaryActionIcon} className="text-sm" />
         </button>
       </div>
     </AppShell>

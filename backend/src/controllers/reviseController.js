@@ -114,15 +114,19 @@ export async function getLearnedWords(req, res) {
       query = query
         .lte("next_review_at", now)
         .order("next_review_at", { ascending: true, nullsFirst: false })
-        .order("mistakes", { ascending: false });
+        .order("mistakes", { ascending: false })
+        .order("word_id", { ascending: true });
     } else if (type === "weak") {
       query = query
         .or("strength.lte.2,mistakes.gte.3")
         .order("mistakes", { ascending: false })
         .order("strength", { ascending: true })
-        .order("last_seen_at", { ascending: true, nullsFirst: true });
+        .order("last_seen_at", { ascending: true, nullsFirst: true })
+        .order("word_id", { ascending: true });
     } else {
-      query = query.order("created_at", { ascending: false });
+      query = query
+        .order("created_at", { ascending: false })
+        .order("word_id", { ascending: false });
     }
 
     const { data, error, count } = await query.range(from, to);

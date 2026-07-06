@@ -5,14 +5,14 @@ import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
 import { formatWordList } from "@/lib/format";
-import { Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton, SpeakerButton } from "@/components/ui";
 import {
   ApiError,
   createNextSet,
   getCurrentSet,
   type LearningSetResponse,
 } from "@/lib/api";
-import { getAccessToken } from "@/lib/session";
+import { getAccessToken, saveQuizSessionId } from "@/lib/session";
 
 export function LearnScreen() {
   const [currentSet, setCurrentSet] = useState<
@@ -88,6 +88,12 @@ export function LearnScreen() {
 
     try {
       const response = await createNextSet(token);
+      if ("session" in response && response.status === "exam_required") {
+        saveQuizSessionId(response.session.id);
+        window.location.href = "/quiz";
+        return;
+      }
+
       setCurrentSet(response.set);
     } catch (exception) {
       if (exception instanceof ApiError) {
@@ -102,10 +108,10 @@ export function LearnScreen() {
 
   return (
     <AppShell active="learn" title="Learn">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-6 flex flex-col gap-4">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-6">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
               Learn
             </h2>
             <div className="mt-1.5 flex items-center gap-2">
@@ -131,7 +137,7 @@ export function LearnScreen() {
             type="button"
             onClick={() => void handleNextSet()}
             disabled={nextLoading}
-            className="group relative flex items-center justify-between overflow-hidden rounded-[20px] p-5 text-white shadow-[0_8px_30px_rgba(142,155,250,0.22)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:opacity-75"
+            className="group relative flex items-center justify-between gap-4 overflow-hidden rounded-[20px] p-4 text-white shadow-[0_8px_30px_rgba(142,155,250,0.22)] transition hover:-translate-y-1 disabled:cursor-not-allowed disabled:opacity-75 sm:p-5"
             style={{
               backgroundImage:
                 "linear-gradient(135deg, var(--brand-blue), #B2B9FA)",
@@ -139,20 +145,25 @@ export function LearnScreen() {
             <div className="absolute -bottom-6 -right-6 opacity-20 transition group-hover:rotate-6">
               <Icon name="star" className="text-7xl" />
             </div>
-            <div className="relative z-10 flex flex-col gap-1.5">
+            <div className="relative z-10 flex min-w-0 flex-1 flex-col gap-1.5 text-left">
               <span className="text-xs font-bold uppercase tracking-[0.25em] text-white/80">
                 Ready for more?
               </span>
-              <span className="text-lg font-extrabold">
+              <span className="text-xl font-bold leading-tight">
                 {nextLoading ? "Loading..." : "Next Set"}
               </span>
             </div>
             <span
-              className="relative z-10 flex h-11 w-20 items-center justify-center rounded-[20px] bg-white shadow-md transition hover:scale-105"
+              className="relative z-10 flex h-11 w-14 shrink-0 items-center justify-center rounded-[20px] bg-white shadow-md transition group-hover:translate-x-0.5"
               style={{ color: "var(--brand-blue)" }}>
               <Icon name="arrowRight" className="text-sm" />
             </span>
           </button>
+          <p className="-mt-1 px-1 text-xs font-bold text-slate-500">
+            {loading || !currentSet
+              ? "Your first set starts right away."
+              : "Next sets unlock after a 75% MCQ check."}
+          </p>
 
           {error ? (
             <p className="text-sm font-medium text-red-500">{error}</p>
@@ -167,66 +178,74 @@ export function LearnScreen() {
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          {loading
-            ? Array.from({ length: 6 }).map((_, index) => (
+        <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
+          {loading ? (
+            Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="learn-word-card rounded-[20px] border bg-white p-4 sm:p-5">
+                <div className="mb-2 flex items-start justify-between gap-3">
+                  <Skeleton className="h-8 w-32" />
+                  <Skeleton className="h-5 w-14 rounded-md" />
+                </div>
+                <div className="mt-3 border-t border-slate-100 pt-3">
+                  <Skeleton className="h-6 w-40" />
+                </div>
+              </div>
+            ))
+          ) : liveWords.length > 0 ? (
+            liveWords.map((word) => {
+              const wordTitle = word.wordId ? (
+                <Link
+                  href={`/words/${word.wordId}`}
+                  className="min-w-0 flex-1">
+                  <h3 className="min-w-0 break-words text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                    {word.english}
+                  </h3>
+                </Link>
+              ) : (
+                <h3 className="min-w-0 flex-1 break-words text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
+                  {word.english}
+                </h3>
+              );
+
+              return (
                 <div
-                  key={index}
-                  className="learn-word-card rounded-[20px] border bg-white p-5">
+                  key={word.english}
+                  className="learn-word-card rounded-[20px] border bg-white p-4 transition sm:p-5">
                   <div className="mb-2 flex items-start justify-between gap-3">
-                    <Skeleton className="h-8 w-32" />
-                    <Skeleton className="h-5 w-14 rounded-md" />
+                    <div className="flex min-w-0 flex-1 items-center gap-2">
+                      {wordTitle}
+                      <SpeakerButton text={word.english} />
+                    </div>
+                    <span className="mt-1 shrink-0 rounded-md border border-sky-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+                      {formatWordList(word.pos)}
+                    </span>
                   </div>
                   <div className="mt-3 border-t border-slate-100 pt-3">
-                    <Skeleton className="h-6 w-40" />
-                  </div>
-                </div>
-              ))
-            : liveWords.length > 0
-              ? liveWords.map((word) => {
-                const card = (
-                  <>
-                    <div className="mb-2 flex items-start justify-between gap-3">
-                      <h3 className="text-2xl font-black tracking-tight text-slate-900">
-                        {word.english}
-                      </h3>
-                      <span className="mt-1 shrink-0 rounded-md border border-sky-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
-                        {formatWordList(word.pos)}
-                      </span>
-                    </div>
-                    <div className="mt-3 border-t border-slate-100 pt-3">
+                    {word.wordId ? (
+                      <Link href={`/words/${word.wordId}`}>
+                        <p className="text-lg font-bold text-teal-700">
+                          {formatWordList(word.bangla)}
+                        </p>
+                      </Link>
+                    ) : (
                       <p className="text-lg font-bold text-teal-700">
                         {formatWordList(word.bangla)}
                       </p>
-                    </div>
-                  </>
-                );
-
-                return word.wordId ? (
-                  <Link
-                    key={word.english}
-                    href={`/words/${word.wordId}`}
-                    className="learn-word-card rounded-[20px] border bg-white p-5 transition">
-                    {card}
-                  </Link>
-                ) : (
-                  <div
-                    key={word.english}
-                    className="learn-word-card rounded-[20px] border bg-white p-5 transition">
-                    {card}
+                    )}
                   </div>
-                );
-              })
-              : (
-                <div className="rounded-[20px] border border-slate-200 bg-white p-6 text-center shadow-soft md:col-span-2">
-                  <p className="font-extrabold text-slate-900">
-                    No learning set loaded.
-                  </p>
-                  <p className="mt-2 text-sm font-medium text-slate-500">
-                    Use Next Set to load words from your database.
-                  </p>
                 </div>
-              )}
+              );
+            })
+          ) : (
+            <EmptyState
+              className="md:col-span-2"
+              icon="book"
+              title="No learning set loaded."
+              body="Create a fresh random learning set when you are ready."
+            />
+          )}
         </div>
       </div>
     </AppShell>

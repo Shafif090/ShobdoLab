@@ -156,6 +156,12 @@ export function LoginScreen() {
             }
           />
 
+          <a
+            href="/forgot-password"
+            className="-mt-1 self-end text-sm font-bold text-(--brand-blue) hover:underline">
+            Forgot password?
+          </a>
+
           {error ? (
             <p className="text-sm font-semibold text-red-500">{error}</p>
           ) : null}

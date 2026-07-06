@@ -1,3 +1,4 @@
+import { randomInt } from "node:crypto";
 import { supabase } from "../lib/supabaseClient.js";
 import {
   createQuizSessionFromWords,
@@ -25,6 +26,27 @@ const modes = {
 
 const SESSION_SELECT =
   "id, user_id, source, source_ref_id, mode, total_items, current_index, correct_items, incorrect_items, status, retry_no, max_retries, started_at, ended_at, duration_ms";
+
+function shuffle(items) {
+  const shuffled = [...items];
+
+  for (let index = shuffled.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
+    [shuffled[index], shuffled[swapIndex]] = [
+      shuffled[swapIndex],
+      shuffled[index],
+    ];
+  }
+
+  return shuffled;
+}
+
+function sampleWordIds(rows, limit) {
+  return shuffle(rows || [])
+    .map((row) => row.word_id)
+    .filter(Boolean)
+    .slice(0, limit);
+}
 
 export async function getExerciseMeta(req, res) {
   try {
@@ -166,11 +188,12 @@ export async function getExerciseHistory(req, res) {
 
 async function getUserWordIds(db, userId, category, limit) {
   const now = new Date().toISOString();
+  const poolLimit = Math.max(limit * 4, limit, 20);
   let query = db
     .from("user_words")
     .select("word_id, strength, mistakes, last_seen_at, next_review_at")
     .eq("user_id", userId)
-    .limit(limit);
+    .limit(poolLimit);
 
   if (category === "weak") {
     query = query
@@ -194,7 +217,7 @@ async function getUserWordIds(db, userId, category, limit) {
     throw error;
   }
 
-  return (data || []).map((row) => row.word_id);
+  return sampleWordIds(data, limit);
 }
 
 async function getAnyLearnedWordIds(db, userId, excludedIds, limit) {
@@ -211,7 +234,7 @@ async function getAnyLearnedWordIds(db, userId, excludedIds, limit) {
     throw error;
   }
 
-  return (data || [])
+  return shuffle(data || [])
     .map((row) => row.word_id)
     .filter((wordId) => !excluded.has(wordId))
     .slice(0, limit);
@@ -260,10 +283,10 @@ async function selectExerciseWords(db, userId, targetCount) {
 
   const learnedWords = await getWordsByIds(db, mergedIds);
   if (learnedWords.length > 0) {
-    return fillWords(db, learnedWords, targetCount);
+    return shuffle(await fillWords(db, learnedWords, targetCount));
   }
 
-  return getActiveWords(db, targetCount);
+  return shuffle(await getActiveWords(db, targetCount));
 }
 
 export async function startExerciseSession(req, res) {

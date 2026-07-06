@@ -274,8 +274,8 @@ export default function HomeTab() {
               iconColor="#4F46E5"
               borderColor={Colors.blue}
               backgroundColor="rgba(142,155,250,0.14)"
-              value={summary?.dueTomorrowCount ?? 0}
-              label="Due Tomorrow"
+              value={summary?.dueTodayCount ?? summary?.dueTomorrowCount ?? 0}
+              label="Due Today"
               loading={loading}
             />
             <MetricCard

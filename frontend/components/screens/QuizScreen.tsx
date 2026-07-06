@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Icon } from "@/components/icons";
-import { QuizHeader, Skeleton } from "@/components/ui";
+import { QuizHeader, Skeleton, SpeakerButton } from "@/components/ui";
 import {
   ApiError,
   finishQuizSession,
@@ -60,6 +60,13 @@ export function QuizScreen() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const questionStartedAtRef = useRef(Date.now());
+
+  useEffect(() => {
+    if (currentItem) {
+      questionStartedAtRef.current = Date.now();
+    }
+  }, [currentItem]);
 
   useEffect(() => {
     let active = true;
@@ -161,6 +168,7 @@ export function QuizScreen() {
         sessionId,
         selectedAnswer,
         currentItem.id,
+        Math.max(0, Date.now() - questionStartedAtRef.current),
       );
       setSessionTotal(response.session.total_items);
 
@@ -228,12 +236,7 @@ export function QuizScreen() {
                 </h2>
               )}
               <div className="mt-4 flex items-center justify-center gap-2">
-                <button className="audio-button" type="button">
-                  <Icon name="volume" className="text-xs" />
-                </button>
-                <button className="audio-button" type="button">
-                  <Icon name="turtle" className="text-xs" />
-                </button>
+                <SpeakerButton text={loading ? "" : prompt} />
               </div>
             </div>
 

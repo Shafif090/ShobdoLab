@@ -82,6 +82,7 @@ CREATE INDEX idx_user_words_user_id     ON user_words(user_id);
 CREATE INDEX idx_user_words_next_review ON user_words(user_id, next_review_at);
 CREATE INDEX idx_user_words_strength    ON user_words(user_id, strength, mistakes);
 CREATE INDEX idx_user_words_status      ON user_words(user_id, status);
+CREATE INDEX idx_user_words_recent      ON user_words(user_id, created_at DESC, word_id DESC);
 
 
 -- ── 4. LEARNING_SETS ──────────────────────────────────────────

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Icon } from "@/components/icons";
-import { Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton } from "@/components/ui";
 import {
   ApiError,
   getExerciseHistory,
@@ -94,10 +94,10 @@ export function ExerciseHistoryScreen() {
           <Icon name="back" className="text-sm" />
         </Link>
       }>
-      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-5 sm:gap-6">
         <div className="flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
               History
             </h2>
             <p className="mt-1 text-sm font-medium text-slate-500">
@@ -114,11 +114,11 @@ export function ExerciseHistoryScreen() {
         ) : null}
 
         {loading ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {Array.from({ length: 5 }).map((_, index) => (
               <div
                 key={index}
-                className="rounded-[20px] border bg-white p-5 shadow-soft">
+                className="rounded-[20px] border bg-white p-4 shadow-soft sm:p-5">
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-6 w-28" />
                   <Skeleton className="h-8 w-16 rounded-full" />
@@ -132,12 +132,12 @@ export function ExerciseHistoryScreen() {
             ))}
           </div>
         ) : items.length > 0 ? (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {items.map((item) => (
               <Link
                 key={item.sessionId}
                 href={`/results?sessionId=${item.sessionId}`}
-                className="rounded-[20px] border bg-white p-5 shadow-soft transition hover:-translate-y-0.5">
+                className="rounded-[20px] border bg-white p-4 shadow-soft transition hover:-translate-y-0.5 sm:p-5">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -205,14 +205,11 @@ export function ExerciseHistoryScreen() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[20px] border border-slate-200 bg-white p-6 text-center shadow-soft">
-            <p className="text-base font-extrabold text-slate-900">
-              No exercise history yet.
-            </p>
-            <p className="mt-2 text-sm font-medium text-slate-500">
-              Completed exercise sessions will appear here.
-            </p>
-          </div>
+          <EmptyState
+            icon="exercise"
+            title="No exercise history yet."
+            body="Completed exercise sessions will appear here."
+          />
         )}
 
         {hasMore ? (

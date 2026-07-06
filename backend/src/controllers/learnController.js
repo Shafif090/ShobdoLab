@@ -7,6 +7,7 @@ import {
 } from "./quizSessionBuilder.js";
 
 const MIN_LEARNING_SET_SIZE = 10;
+const LEARN_SET_PASS_PERCENT = 75;
 const WORD_PAGE_SIZE = 1000;
 const SET_EXPIRES_IN_DAYS = 7;
 
@@ -201,6 +202,88 @@ async function registerLearningSetWords(db, userId, words) {
   }
 }
 
+async function getPassedLearnSetSession(db, userId, setId) {
+  const { data, error } = await db
+    .from("quiz_sessions")
+    .select("id, correct_items, total_items, status")
+    .eq("user_id", userId)
+    .eq("source", "learn")
+    .eq("source_ref_id", setId)
+    .eq("mode", "mcq")
+    .eq("status", "completed");
+
+  if (error) {
+    throw error;
+  }
+
+  return (data || []).find((session) => {
+    const totalItems = Number(session.total_items || 0);
+    const correctItems = Number(session.correct_items || 0);
+    if (totalItems <= 0) {
+      return false;
+    }
+
+    return Math.round((correctItems / totalItems) * 100) >= LEARN_SET_PASS_PERCENT;
+  });
+}
+
+async function startLearnSetGateExam(db, userId, setRow) {
+  const { data: existingSession, error: sessionLookupError } = await db
+    .from("quiz_sessions")
+    .select(
+      "id, user_id, source, source_ref_id, mode, total_items, current_index, correct_items, incorrect_items, status, retry_no, max_retries, started_at, ended_at, duration_ms",
+    )
+    .eq("user_id", userId)
+    .eq("source", "learn")
+    .eq("source_ref_id", setRow.id)
+    .eq("mode", "mcq")
+    .eq("status", "active")
+    .order("started_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (sessionLookupError) {
+    throw sessionLookupError;
+  }
+
+  if (existingSession) {
+    return {
+      status: "exam_required",
+      session: existingSession,
+      firstItem: null,
+    };
+  }
+
+  const hydratedSet = await getLearningSetWithItems(db, setRow);
+  const words = hydratedSet.items.flatMap((item) =>
+    item.word ? [item.word] : [],
+  );
+  const createdSession = await createQuizSessionFromWords({
+    db,
+    userId,
+    source: "learn",
+    sourceRefId: setRow.id,
+    mode: "mcq",
+    words,
+  });
+
+  if (!createdSession) {
+    return null;
+  }
+
+  await db
+    .from("learning_sets")
+    .update({ state: "in_quiz" })
+    .eq("id", setRow.id)
+    .eq("user_id", userId);
+
+  return {
+    status: "exam_required",
+    session: createdSession.session,
+    firstItem: createdSession.firstItem,
+  };
+}
+
 async function createLearningSet(db, userId, excludedIds = []) {
   const latestSetIndex = await getLatestSetIndex(db, userId);
   const words = await chooseWordsForSet(db, userId, excludedIds);
@@ -327,11 +410,33 @@ export async function createNextSet(req, res) {
         item.word?.id ? [item.word.id] : [],
       );
 
+      const passedSession = await getPassedLearnSetSession(
+        db,
+        req.userId,
+        activeSet.id,
+      );
+
+      if (!passedSession) {
+        const gateExam = await startLearnSetGateExam(db, req.userId, activeSet);
+        if (!gateExam) {
+          return jsonError(
+            res,
+            404,
+            "NO_WORDS_AVAILABLE",
+            "No words were available for the current set exam.",
+          );
+        }
+
+        return res.status(202).json({
+          ...gateExam,
+          passPercent: LEARN_SET_PASS_PERCENT,
+          message: `Score at least ${LEARN_SET_PASS_PERCENT}% on this set exam to unlock the next set.`,
+        });
+      }
+
       await db
         .from("learning_sets")
-        .update({
-          state: activeSet.state === "in_quiz" ? "completed" : "expired",
-        })
+        .update({ state: "completed" })
         .eq("id", activeSet.id)
         .eq("user_id", req.userId);
     }

@@ -147,6 +147,21 @@ input {
   background: #f8fafc;
   color: #6b7280;
   box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.audio-button:hover:not(:disabled) {
+  background: #eef2ff;
+  color: var(--brand-blue);
+  transform: translateY(-1px);
+}
+
+.audio-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .skeleton-block {

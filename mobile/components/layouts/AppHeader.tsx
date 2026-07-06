@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Colors } from "@/constants/theme";
+import { AppText as Text } from "@/components/app-typography";
 
 export function AppHeader({
   title,

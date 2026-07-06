@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 export const SESSION_SELECT =
   "id, user_id, source, source_ref_id, mode, total_items, current_index, correct_items, incorrect_items, status, retry_no, max_retries, started_at, ended_at, duration_ms";
 
@@ -31,6 +33,15 @@ export function seededShuffle(values, seed) {
   const result = [...values];
   for (let index = result.length - 1; index > 0; index -= 1) {
     const swapIndex = hashValue(`${seed}:${index}`) % (index + 1);
+    [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
+  }
+  return result;
+}
+
+function shuffle(values) {
+  const result = [...values];
+  for (let index = result.length - 1; index > 0; index -= 1) {
+    const swapIndex = randomInt(index + 1);
     [result[index], result[swapIndex]] = [result[swapIndex], result[index]];
   }
   return result;
@@ -114,15 +125,34 @@ export async function getWordsByIds(db, wordIds) {
 }
 
 export async function getActiveWords(db, limit, excludedIds = []) {
+  const uniqueExcludedIds = uniqueValues(excludedIds);
+  let countQuery = db
+    .from("words")
+    .select("id", { count: "exact", head: true })
+    .eq("is_active", true);
+
+  if (uniqueExcludedIds.length > 0) {
+    countQuery = countQuery.not("id", "in", `(${uniqueExcludedIds.join(",")})`);
+  }
+
+  const { count, error: countError } = await countQuery;
+  if (countError) {
+    throw countError;
+  }
+
+  const total = count ?? 0;
+  const from = total > limit ? randomInt(total - limit + 1) : 0;
+  const to = from + Math.max(limit - 1, 0);
+
   let query = db
     .from("words")
     .select("id, english, bangla, pos, root, family_id, is_active")
     .eq("is_active", true)
     .order("id", { ascending: true })
-    .limit(limit);
+    .range(from, to);
 
-  if (excludedIds.length > 0) {
-    query = query.not("id", "in", `(${uniqueValues(excludedIds).join(",")})`);
+  if (uniqueExcludedIds.length > 0) {
+    query = query.not("id", "in", `(${uniqueExcludedIds.join(",")})`);
   }
 
   const { data, error } = await query;
@@ -130,7 +160,7 @@ export async function getActiveWords(db, limit, excludedIds = []) {
     throw error;
   }
 
-  return data || [];
+  return shuffle(data || []);
 }
 
 export async function fillWords(db, words, targetCount) {

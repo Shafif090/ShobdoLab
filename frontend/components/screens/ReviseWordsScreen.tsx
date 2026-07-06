@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { formatWordList } from "@/lib/format";
 import { Icon } from "@/components/icons";
-import { Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton } from "@/components/ui";
 import {
   ApiError,
   getLearnedWords,
@@ -124,6 +124,24 @@ function getVisibleRecentWords(
   );
 }
 
+function appendUniqueLearnedWords(
+  current: LearnedWord[],
+  incoming: LearnedWord[],
+) {
+  const seenWordIds = new Set(current.map((word) => word.wordId));
+  return [
+    ...current,
+    ...incoming.filter((word) => {
+      if (seenWordIds.has(word.wordId)) {
+        return false;
+      }
+
+      seenWordIds.add(word.wordId);
+      return true;
+    }),
+  ];
+}
+
 export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
   const router = useRouter();
   const [words, setWords] = useState<LearnedWord[]>([]);
@@ -136,11 +154,17 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
   const [loadingMore, setLoadingMore] = useState(false);
   const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState<LearnedWordsSort>("newest");
   const loadingMoreRef = useRef(false);
   const details = copy[type];
   const canSearchAndSort = type === "recent";
   const hasSearch = search.trim().length > 0;
+
+  function clearSearch() {
+    setSearch("");
+    setDebouncedSearch("");
+  }
 
   const loadWords = useCallback(async (nextPage: number) => {
     if (canSearchAndSort) return;
@@ -163,7 +187,9 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
     try {
       const response = await getLearnedWords(token, nextPage, 20, type);
       setWords((current) =>
-        nextPage === 1 ? response.items : [...current, ...response.items],
+        nextPage === 1
+          ? response.items
+          : appendUniqueLearnedWords(current, response.items),
       );
       setPage(response.page);
       setTotal(response.total);
@@ -201,7 +227,7 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
       let nextPage = 1;
       let hasNextPage = true;
       let totalCount = 0;
-      const collected: LearnedWord[] = [];
+      let collected: LearnedWord[] = [];
 
       while (hasNextPage) {
         const response = await getLearnedWords(
@@ -211,7 +237,7 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
           "recent",
         );
 
-        collected.push(...response.items);
+        collected = appendUniqueLearnedWords(collected, response.items);
         totalCount = response.total;
         hasNextPage = response.hasMore;
         nextPage += 1;
@@ -246,8 +272,20 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
       return;
     }
 
-    setWords(getVisibleRecentWords(allRecentWords, search, sort));
-  }, [allRecentWords, canSearchAndSort, search, sort]);
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => window.clearTimeout(timeout);
+  }, [canSearchAndSort, search]);
+
+  useEffect(() => {
+    if (!canSearchAndSort) {
+      return;
+    }
+
+    setWords(getVisibleRecentWords(allRecentWords, debouncedSearch, sort));
+  }, [allRecentWords, canSearchAndSort, debouncedSearch, sort]);
 
   async function startRevision() {
     if (type === "recent" || starting) return;
@@ -293,11 +331,11 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
           <Icon name="back" className="text-sm" />
         </button>
       }>
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-6 flex flex-col gap-4">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-6">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-black tracking-tight text-slate-900">
+              <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
                 {details.title}
               </h2>
               <div className="mt-1.5 flex items-center gap-2">
@@ -331,7 +369,7 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
           ) : null}
 
           {canSearchAndSort ? (
-            <div className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-soft">
+            <div className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-soft sm:p-5">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
                   Find a learned word
@@ -339,7 +377,7 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
                 {hasSearch ? (
                   <button
                     type="button"
-                    onClick={() => setSearch("")}
+                    onClick={clearSearch}
                     className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600 transition hover:bg-slate-200">
                     <Icon name="close" className="text-[10px]" />
                     Clear
@@ -388,11 +426,11 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, index) => (
               <div
                 key={index}
-                className="learn-word-card rounded-[20px] border bg-white p-5">
+                className="learn-word-card rounded-[20px] border bg-white p-4 sm:p-5">
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <Skeleton className="h-8 w-32" />
                   <Skeleton className="h-5 w-14 rounded-md" />
@@ -405,14 +443,14 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
             ))}
           </div>
         ) : words.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             {words.map((word) => (
               <Link
                 key={word.wordId}
                 href={`/words/${word.wordId}`}
-                className="learn-word-card rounded-[20px] border bg-white p-5 transition">
+                className="learn-word-card rounded-[20px] border bg-white p-4 transition sm:p-5">
                 <div className="mb-2 flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 flex-1 break-words text-2xl font-black tracking-tight text-slate-900">
+                  <h3 className="min-w-0 flex-1 break-words text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
                     {word.english}
                   </h3>
                   <span className="mt-1 shrink-0 rounded-md border border-sky-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
@@ -440,24 +478,25 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
             ))}
           </div>
         ) : (
-          <div className="rounded-[20px] border border-slate-200 bg-white p-6 text-center shadow-soft">
-            <p className="text-base font-extrabold text-slate-900">
-              {hasSearch ? "No words match your search." : details.empty}
-            </p>
-            <p className="mt-2 text-sm font-medium text-slate-500">
-              {hasSearch
+          <EmptyState
+            icon={hasSearch ? "search" : "book"}
+            title={hasSearch ? "No words match your search." : details.empty}
+            body={
+              hasSearch
                 ? "Try another spelling, Bangla meaning, POS, or status."
-                : details.emptyBody}
-            </p>
-            {hasSearch ? (
-              <button
-                type="button"
-                onClick={() => setSearch("")}
-                className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-bold text-white">
-                Clear Search
-              </button>
-            ) : null}
-          </div>
+                : details.emptyBody
+            }
+            action={
+              hasSearch ? (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-slate-900 px-5 text-sm font-bold text-white">
+                  Clear Search
+                </button>
+              ) : null
+            }
+          />
         )}
 
         {hasMore ? (

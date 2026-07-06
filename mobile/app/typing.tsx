@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { router } from "expo-router";
 import { Pressable, View } from "react-native";
 import { Colors } from "@/constants/theme";
@@ -6,7 +6,13 @@ import {
   AppText as Text,
   AppTextInput as TextInput,
 } from "@/components/app-typography";
-import { AppIcon, IconButton, Screen, Skeleton } from "@/components";
+import {
+  AppIcon,
+  IconButton,
+  Screen,
+  Skeleton,
+  SpeakerButton,
+} from "@/components";
 import {
   ApiError,
   finishQuizSession,
@@ -34,6 +40,7 @@ export default function TypingScreen() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const questionStartedAtRef = useRef(Date.now());
   const totalItems = sessionTotal || currentSet?.total_words || 0;
   const progressPercent =
     currentItem && totalItems > 0 ? (currentItem.sequence_no / totalItems) * 100 : 0;
@@ -101,6 +108,12 @@ export default function TypingScreen() {
     };
   }, []);
 
+  useEffect(() => {
+    if (currentItem) {
+      questionStartedAtRef.current = Date.now();
+    }
+  }, [currentItem]);
+
   async function handleCheck() {
     if (loading) return;
 
@@ -119,6 +132,7 @@ export default function TypingScreen() {
         sessionId,
         value,
         currentItem.id,
+        Math.max(0, Date.now() - questionStartedAtRef.current),
       );
       setSessionTotal(response.session.total_items);
 
@@ -202,8 +216,9 @@ export default function TypingScreen() {
             </Text>
           )}
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <IconButton icon="volume" />
-            <IconButton icon="turtle" />
+            <SpeakerButton
+              text={initialLoading ? "" : currentItem?.prompt_text ?? ""}
+            />
           </View>
         </View>
 

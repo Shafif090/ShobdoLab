@@ -1,8 +1,17 @@
-import { expireAuthSession } from "./session";
+import {
+  expireAuthSession,
+  loadAuthSession,
+  saveAuthSession,
+} from "./session";
 
 const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5500"
+  process.env.NEXT_PUBLIC_API_URL ??
+  (process.env.NODE_ENV === "production" ? "" : "http://localhost:5500")
 ).replace(/\/$/, "");
+
+if (!API_BASE_URL && process.env.NODE_ENV === "production") {
+  throw new Error("NEXT_PUBLIC_API_URL must be configured for production.");
+}
 
 type ApiErrorBody = {
   error?: {
@@ -11,6 +20,8 @@ type ApiErrorBody = {
     details?: unknown;
   };
 };
+
+let refreshAuthPromise: Promise<AuthSession | null> | null = null;
 
 export class ApiError extends Error {
   status: number;
@@ -31,15 +42,52 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return text ? (JSON.parse(text) as T) : (null as T);
 }
 
-async function request<T>(
+async function refreshStoredAuthSession() {
+  const session = loadAuthSession();
+  if (!session?.refreshToken) {
+    return null;
+  }
+
+  if (session.sessionExpiresAt && Date.now() >= session.sessionExpiresAt) {
+    expireAuthSession();
+    return null;
+  }
+
+  if (!refreshAuthPromise) {
+    refreshAuthPromise = (async () => {
+      const response = await fetch(`${API_BASE_URL}/v1/auth/refresh`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken: session.refreshToken }),
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const refreshed = await parseResponse<AuthSession>(response);
+      saveAuthSession(refreshed, { preserveSessionExpiresAt: true });
+      return refreshed;
+    })().finally(() => {
+      refreshAuthPromise = null;
+    });
+  }
+
+  return refreshAuthPromise;
+}
+
+async function fetchApi(
   path: string,
   options: {
     method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
     token?: string | null;
     body?: unknown;
-  } = {},
-): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  },
+) {
+  return fetch(`${API_BASE_URL}${path}`, {
     method: options.method ?? "GET",
     headers: {
       Accept: "application/json",
@@ -48,6 +96,27 @@ async function request<T>(
     },
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
+}
+
+async function request<T>(
+  path: string,
+  options: {
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+    token?: string | null;
+    body?: unknown;
+  } = {},
+): Promise<T> {
+  let response = await fetchApi(path, options);
+
+  if (response.status === 401 && !path.startsWith("/v1/auth")) {
+    const refreshed = await refreshStoredAuthSession();
+    if (refreshed?.accessToken) {
+      response = await fetchApi(path, {
+        ...options,
+        token: refreshed.accessToken,
+      });
+    }
+  }
 
   if (!response.ok) {
     if (response.status === 401 && !path.startsWith("/v1/auth")) {
@@ -86,6 +155,7 @@ export type AuthSession = {
   refreshToken: string | null;
   expiresIn: number | null;
   expiresAt?: number | null;
+  sessionExpiresAt?: number | null;
   user: {
     id: string;
     email: string | null;
@@ -113,6 +183,22 @@ export type OAuthSessionInput = {
   expiresAt?: number | null;
 };
 
+export type ForgotPasswordInput = {
+  email: string;
+  redirectTo?: string;
+};
+
+export type ResetPasswordInput = {
+  accessToken: string;
+  refreshToken: string;
+  password: string;
+};
+
+export type AuthMessageResponse = {
+  ok: boolean;
+  message: string;
+};
+
 export type HomeSummaryResponse = {
   streakDays: number;
   wordsLearnedTotal: number;
@@ -121,7 +207,8 @@ export type HomeSummaryResponse = {
     revised: number;
     exercise: number;
   };
-  dueTomorrowCount: number;
+  dueTodayCount: number;
+  dueTomorrowCount?: number;
   unreadNotifications: number;
 };
 
@@ -283,9 +370,12 @@ export type DictionaryWord = {
   progress: WordDetailResponse["progress"];
 };
 
+export type DictionarySort = "az" | "za" | "strength_high" | "strength_low";
+
 export type WordSearchResponse = {
   items: DictionaryWord[];
   query: string;
+  sort: DictionarySort;
   page: number;
   limit: number;
   total: number;
@@ -312,7 +402,7 @@ export type LearningSetItem = {
 };
 
 export type LearningSetResponse = {
-  status: string;
+  status: "created" | "ready" | "in_quiz" | "completed" | "expired";
   set: {
     id: string;
     user_id: string;
@@ -489,6 +579,11 @@ export type QuizResultResponse = {
     isCorrect: boolean;
     answered: boolean;
   }>;
+  nextSetGate: {
+    passed: boolean;
+    passPercent: number;
+    statusText: string;
+  } | null;
   canRetry: boolean;
   retryAction: {
     endpoint: string;
@@ -496,6 +591,16 @@ export type QuizResultResponse = {
     retryNo: number;
   };
 };
+
+export type NextSetResponse =
+  | LearningSetResponse
+  | {
+      status: "exam_required";
+      session: QuizSession;
+      firstItem: QuizItem | null;
+      passPercent: number;
+      message: string;
+    };
 
 export async function login(input: LoginInput) {
   return request<AuthSession>("/v1/auth/login", {
@@ -506,6 +611,20 @@ export async function login(input: LoginInput) {
 
 export async function signup(input: SignupInput) {
   return request<AuthSession>("/v1/auth/signup", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function forgotPassword(input: ForgotPasswordInput) {
+  return request<AuthMessageResponse>("/v1/auth/forgot-password", {
+    method: "POST",
+    body: input,
+  });
+}
+
+export async function resetPassword(input: ResetPasswordInput) {
+  return request<AuthMessageResponse>("/v1/auth/reset-password", {
     method: "POST",
     body: input,
   });
@@ -573,11 +692,18 @@ export async function getWordDetail(token: string, wordId: string | number) {
   return request<WordDetailResponse>(`/v1/words/${wordId}`, { token });
 }
 
-export async function searchWords(token: string, query = "", page = 1, limit = 20) {
+export async function searchWords(
+  token: string,
+  query = "",
+  page = 1,
+  limit = 20,
+  sort: DictionarySort = "az",
+) {
   const params = new URLSearchParams({
     q: query,
     page: String(page),
     limit: String(limit),
+    sort,
   });
 
   return request<WordSearchResponse>(`/v1/words/search?${params.toString()}`, {
@@ -589,18 +715,6 @@ export async function addWord(token: string, wordId: string | number) {
   return request<AddWordResponse>(`/v1/words/${wordId}/add`, {
     method: "POST",
     token,
-  });
-}
-
-export async function practiceWord(
-  token: string,
-  wordId: string | number,
-  mode = "mixed",
-) {
-  return request<ExerciseStartResponse>(`/v1/words/${wordId}/practice`, {
-    method: "POST",
-    token,
-    body: { mode },
   });
 }
 
@@ -628,7 +742,7 @@ export async function getCurrentSet(token: string) {
 }
 
 export async function createNextSet(token: string) {
-  return request<LearningSetResponse>("/v1/learn/next-set", {
+  return request<NextSetResponse>("/v1/learn/next-set", {
     method: "POST",
     token,
   });

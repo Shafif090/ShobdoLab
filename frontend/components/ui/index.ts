@@ -2,6 +2,8 @@ export { ActionCard } from "./ActionCard";
 export { ArrowDivider } from "./ArrowDivider";
 export { BackButton } from "./BackButton";
 export { BrandInput } from "./BrandInput";
+export { EmptyState } from "./EmptyState";
 export { GoogleMark } from "./GoogleMark";
 export { QuizHeader } from "./QuizHeader";
+export { SpeakerButton } from "./SpeakerButton";
 export { Skeleton } from "./Skeleton";

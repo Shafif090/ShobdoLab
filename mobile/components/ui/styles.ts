@@ -12,6 +12,13 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  iconButtonActive: {
+    backgroundColor: "rgba(142,155,250,0.14)",
+    borderColor: "rgba(142,155,250,0.35)",
+  },
+  iconButtonDisabled: {
+    opacity: 0.45,
+  },
   field: {
     gap: 6,
   },

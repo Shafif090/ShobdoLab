@@ -6,11 +6,9 @@ import { AppText as Text } from "@/components/app-typography";
 import { AppIcon, Skeleton, TabScreen } from "@/components";
 import {
   ApiError,
-  getCurrentSet,
   getExerciseMeta,
   startExerciseSession,
   type ExerciseMetaResponse,
-  type LearningSetResponse,
 } from "@/lib/api";
 import {
   clearQuizSessionId,
@@ -47,52 +45,33 @@ const modes = {
 
 export default function ExerciseTab() {
   const [mode, setMode] = useState<keyof typeof modes>("mixed");
-  const [liveSet, setLiveSet] = useState<LearningSetResponse["set"] | null>(
-    null,
-  );
   const [meta, setMeta] = useState<ExerciseMetaResponse | null>(null);
-  const [syncMessage, setSyncMessage] = useState(
-    "Sign in to sync your current learning set.",
-  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    async function syncCurrentSet() {
+    async function loadExerciseMeta() {
       const token = await getAccessToken();
 
       if (!token) {
         if (active) {
-          setSyncMessage("Sign in to sync your current learning set.");
           setLoading(false);
         }
         return;
       }
 
       try {
-        const [setResponse, metaResponse] = await Promise.all([
-          getCurrentSet(token),
-          getExerciseMeta(token),
-        ]);
+        const metaResponse = await getExerciseMeta(token);
         if (!active) return;
 
-        setLiveSet(setResponse.set);
         setMeta(metaResponse);
-        setSyncMessage(
-          `${setResponse.set.total_words} learned words are ready for practice.`,
-        );
       } catch (exception) {
         if (!active) return;
 
-        setLiveSet(null);
-
         if (exception instanceof ApiError && exception.status === 401) {
-          setSyncMessage("Your session expired. Sign in again to sync.");
           return;
         }
-
-        setSyncMessage("Unable to load your practice words right now.");
       } finally {
         if (active) {
           setLoading(false);
@@ -100,7 +79,7 @@ export default function ExerciseTab() {
       }
     }
 
-    void syncCurrentSet();
+    void loadExerciseMeta();
 
     return () => {
       active = false;
@@ -178,35 +157,6 @@ export default function ExerciseTab() {
               </Text>
             </Pressable>
           ))}
-        </View>
-
-        <View
-          style={{
-            width: "100%",
-            borderRadius: 20,
-            borderWidth: 1,
-            borderColor: liveSet ? "rgba(161,232,175,0.45)" : Colors.border,
-            backgroundColor: liveSet
-              ? "rgba(161,232,175,0.18)"
-              : Colors.surface,
-            padding: 16,
-            gap: 6,
-          }}>
-          <Text style={{ fontSize: 12, fontWeight: "800", color: Colors.text }}>
-            Backend sync
-          </Text>
-          {loading ? (
-            <>
-              <Skeleton style={{ width: "75%", height: 16 }} />
-              <Skeleton style={{ width: "55%", height: 16 }} />
-            </>
-          ) : (
-            <>
-              <Text style={{ color: Colors.muted, fontWeight: "600" }}>
-                {syncMessage}
-              </Text>
-            </>
-          )}
         </View>
 
         <View

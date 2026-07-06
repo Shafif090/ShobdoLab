@@ -10,19 +10,21 @@ import { Skeleton } from "@/components/ui";
 import {
   addWord,
   ApiError,
-  practiceWord,
   searchWords,
+  type DictionarySort,
   type DictionaryWord,
 } from "@/lib/api";
-import {
-  clearQuizSessionId,
-  getAccessToken,
-  saveQuizSessionId,
-} from "@/lib/session";
+import { getAccessToken } from "@/lib/session";
+
+const sortOptions: { value: DictionarySort; label: string }[] = [
+  { value: "az", label: "A-Z" },
+  { value: "za", label: "Z-A" },
+];
 
 export function DictionaryScreen() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<DictionarySort>("az");
   const [words, setWords] = useState<DictionaryWord[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -34,7 +36,7 @@ export function DictionaryScreen() {
   const loadingMoreRef = useRef(false);
 
   const loadWords = useCallback(
-    async (nextPage: number, nextQuery = query) => {
+    async (nextPage: number, nextQuery = query, nextSort = sort) => {
       if (nextPage > 1 && loadingMoreRef.current) return;
 
       const token = getAccessToken();
@@ -52,7 +54,7 @@ export function DictionaryScreen() {
       setError(null);
 
       try {
-        const response = await searchWords(token, nextQuery, nextPage, 20);
+        const response = await searchWords(token, nextQuery, nextPage, 20, nextSort);
         setWords((current) =>
           nextPage === 1 ? response.items : [...current, ...response.items],
         );
@@ -71,16 +73,16 @@ export function DictionaryScreen() {
         loadingMoreRef.current = false;
       }
     },
-    [query, router],
+    [query, router, sort],
   );
 
   useEffect(() => {
     const timeout = window.setTimeout(() => {
-      void loadWords(1, query);
-    }, 250);
+      void loadWords(1, query, sort);
+    }, 500);
 
     return () => window.clearTimeout(timeout);
-  }, [loadWords, query]);
+  }, [loadWords, query, sort]);
 
   async function addSelectedWord(wordId: string) {
     const token = getAccessToken();
@@ -110,32 +112,6 @@ export function DictionaryScreen() {
     }
   }
 
-  async function startPractice(wordId: string) {
-    const token = getAccessToken();
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-
-    setBusyWordId(wordId);
-    setError(null);
-
-    try {
-      const response = await practiceWord(token, wordId, "mixed");
-      saveQuizSessionId(response.session.id);
-      router.push("/typing");
-    } catch (exception) {
-      clearQuizSessionId();
-      setError(
-        exception instanceof ApiError
-          ? exception.message
-          : "Unable to start practice right now.",
-      );
-    } finally {
-      setBusyWordId(null);
-    }
-  }
-
   return (
     <AppShell active="dictionary" title="Dictionary">
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
@@ -146,8 +122,8 @@ export function DictionaryScreen() {
                 Dictionary
               </h2>
               <p className="mt-2 text-sm font-medium text-slate-500">
-                Search all available words, add them to your list, or practice
-                one immediately.
+                Search all available words and add the useful ones to your
+                list.
               </p>
             </div>
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">
@@ -171,6 +147,26 @@ export function DictionaryScreen() {
               />
             </div>
           </label>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {sortOptions.map((option) => {
+              const active = sort === option.value;
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setSort(option.value)}
+                  className={`rounded-full px-3 py-2 text-xs font-black transition ${
+                    active
+                      ? "bg-slate-900 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}>
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         {error ? (
@@ -216,20 +212,13 @@ export function DictionaryScreen() {
                   </span>
                 </div>
 
-                <div className="mt-5 grid grid-cols-3 gap-2">
+                <div className="mt-5 grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => void addSelectedWord(word.wordId)}
                     disabled={word.learned || busyWordId === word.wordId}
                     className="rounded-2xl bg-[var(--brand-green)] px-3 py-2.5 text-xs font-black text-slate-900 disabled:opacity-55">
                     {word.learned ? "Added" : "Add"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void startPractice(word.wordId)}
-                    disabled={busyWordId === word.wordId}
-                    className="rounded-2xl bg-slate-900 px-3 py-2.5 text-xs font-black text-white disabled:opacity-60">
-                    Practice
                   </button>
                   <Link
                     href={`/words/${word.wordId}`}
@@ -253,7 +242,7 @@ export function DictionaryScreen() {
           <div className="flex justify-center">
             <button
               type="button"
-              onClick={() => void loadWords(page + 1)}
+              onClick={() => void loadWords(page + 1, query, sort)}
               disabled={loadingMore}
               className="rounded-2xl bg-slate-900 px-6 py-3 text-sm font-bold text-white disabled:opacity-70">
               {loadingMore ? "Loading..." : "Load More"}

@@ -122,6 +122,24 @@ function getVisibleRecentWords(
   );
 }
 
+function appendUniqueLearnedWords(
+  current: LearnedWord[],
+  incoming: LearnedWord[],
+) {
+  const seenWordIds = new Set(current.map((word) => word.wordId));
+  return [
+    ...current,
+    ...incoming.filter((word) => {
+      if (seenWordIds.has(word.wordId)) {
+        return false;
+      }
+
+      seenWordIds.add(word.wordId);
+      return true;
+    }),
+  ];
+}
+
 function getType(value: string | string[] | undefined): ReviseWordsType {
   const type = Array.isArray(value) ? value[0] : value;
   return type === "due" || type === "weak" || type === "recent"
@@ -143,10 +161,16 @@ export default function ReviseWordsScreen() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [starting, setStarting] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sort, setSort] = useState<LearnedWordsSort>("newest");
   const loadingMoreRef = useRef(false);
   const canSearchAndSort = type === "recent";
   const hasSearch = search.trim().length > 0;
+
+  function clearSearch() {
+    setSearch("");
+    setDebouncedSearch("");
+  }
 
   const loadWords = useCallback(async (nextPage: number) => {
     if (canSearchAndSort) return;
@@ -169,7 +193,9 @@ export default function ReviseWordsScreen() {
     try {
       const response = await getLearnedWords(token, nextPage, 20, type);
       setWords((current) =>
-        nextPage === 1 ? response.items : [...current, ...response.items],
+        nextPage === 1
+          ? response.items
+          : appendUniqueLearnedWords(current, response.items),
       );
       setPage(response.page);
       setTotal(response.total);
@@ -207,7 +233,7 @@ export default function ReviseWordsScreen() {
       let nextPage = 1;
       let hasNextPage = true;
       let totalCount = 0;
-      const collected: LearnedWord[] = [];
+      let collected: LearnedWord[] = [];
 
       while (hasNextPage) {
         const response = await getLearnedWords(
@@ -217,7 +243,7 @@ export default function ReviseWordsScreen() {
           "recent",
         );
 
-        collected.push(...response.items);
+        collected = appendUniqueLearnedWords(collected, response.items);
         totalCount = response.total;
         hasNextPage = response.hasMore;
         nextPage += 1;
@@ -256,8 +282,20 @@ export default function ReviseWordsScreen() {
       return;
     }
 
-    setWords(getVisibleRecentWords(allRecentWords, search, sort));
-  }, [allRecentWords, canSearchAndSort, search, sort]);
+    const timeout = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [canSearchAndSort, search]);
+
+  useEffect(() => {
+    if (!canSearchAndSort) {
+      return;
+    }
+
+    setWords(getVisibleRecentWords(allRecentWords, debouncedSearch, sort));
+  }, [allRecentWords, canSearchAndSort, debouncedSearch, sort]);
 
   async function startRevision() {
     if (type === "recent" || starting) return;
@@ -406,7 +444,7 @@ export default function ReviseWordsScreen() {
                 </Text>
                 {hasSearch ? (
                   <Pressable
-                    onPress={() => setSearch("")}
+                    onPress={clearSearch}
                     style={{
                       minHeight: 28,
                       borderRadius: 999,
@@ -636,7 +674,7 @@ export default function ReviseWordsScreen() {
             </Text>
             {hasSearch ? (
               <Pressable
-                onPress={() => setSearch("")}
+                onPress={clearSearch}
                 style={{
                   marginTop: 16,
                   minHeight: 44,

@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { formatWordList } from "@/lib/format";
 import { Icon } from "@/components/icons";
-import { Skeleton } from "@/components/ui";
+import { EmptyState, Skeleton } from "@/components/ui";
 import {
   ApiError,
   getLearnedWords,
@@ -80,10 +80,10 @@ export function LearnedWordsScreen() {
           <Icon name="back" className="text-sm" />
         </button>
       }>
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="mb-6 flex flex-col gap-4">
+      <div className="mx-auto w-full max-w-4xl">
+        <div className="mb-5 flex flex-col gap-4 sm:mb-6">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
               Recent
             </h2>
             <div className="mt-1.5 flex items-center gap-2">
@@ -115,11 +115,11 @@ export function LearnedWordsScreen() {
         </div>
 
         {loading ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             {Array.from({ length: 8 }).map((_, index) => (
               <div
                 key={index}
-                className="learn-word-card rounded-[20px] border bg-white p-5">
+                className="learn-word-card rounded-[20px] border bg-white p-4 sm:p-5">
                 <div className="mb-2 flex items-start justify-between gap-3">
                   <Skeleton className="h-8 w-32" />
                   <Skeleton className="h-5 w-14 rounded-md" />
@@ -132,14 +132,14 @@ export function LearnedWordsScreen() {
             ))}
           </div>
         ) : words.length > 0 ? (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             {words.map((word) => (
               <Link
                 key={word.wordId}
                 href={`/words/${word.wordId}`}
-                className="learn-word-card rounded-[20px] border bg-white p-5 transition">
+                className="learn-word-card rounded-[20px] border bg-white p-4 transition sm:p-5">
                 <div className="mb-2 flex items-start justify-between gap-3">
-                  <h3 className="min-w-0 flex-1 break-words text-2xl font-black tracking-tight text-slate-900">
+                  <h3 className="min-w-0 flex-1 break-words text-xl font-black tracking-tight text-slate-900 sm:text-2xl">
                     {word.english}
                   </h3>
                   <span className="mt-1 shrink-0 rounded-md border border-sky-100 bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
@@ -167,14 +167,11 @@ export function LearnedWordsScreen() {
             ))}
           </div>
         ) : (
-          <div className="rounded-[20px] border border-slate-200 bg-white p-6 text-center shadow-soft">
-            <p className="text-base font-extrabold text-slate-900">
-              No learned words yet.
-            </p>
-            <p className="mt-2 text-sm font-medium text-slate-500">
-              Words appear here after you learn them.
-            </p>
-          </div>
+          <EmptyState
+            icon="book"
+            title="No learned words yet."
+            body="Words appear here after you learn them."
+          />
         )}
 
         {hasMore ? (

@@ -6,18 +6,21 @@ dotenv.config();
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabasePublicKey = process.env.SUPABASE_KEY;
 const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const supabaseKey = supabaseServiceRoleKey || supabasePublicKey;
 
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseUrl || !supabasePublicKey) {
   console.warn(
     "[supabase] SUPABASE_URL or SUPABASE_KEY is missing. DB-backed routes will fail until env is configured.",
   );
 }
 
-export const supabase = createClient(supabaseUrl || "", supabaseKey || "");
+export const supabase = createClient(supabaseUrl || "", supabasePublicKey || "");
+export const adminSupabase = createClient(
+  supabaseUrl || "",
+  supabaseServiceRoleKey || supabasePublicKey || "",
+);
 export const authSupabase = createClient(
   supabaseUrl || "",
-  supabasePublicKey || supabaseKey || "",
+  supabasePublicKey || "",
 );
 
 export function getSupabaseConfigStatus() {
@@ -28,12 +31,29 @@ export function getSupabaseConfigStatus() {
   };
 }
 
+export function assertSupabaseConfig() {
+  if (!supabaseUrl || !supabasePublicKey) {
+    throw new Error("SUPABASE_URL and SUPABASE_KEY must be configured.");
+  }
+}
+
+export function createAuthSupabaseClient() {
+  return createClient(supabaseUrl || "", supabasePublicKey || "", {
+    auth: {
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      flowType: "implicit",
+      persistSession: false,
+    },
+  });
+}
+
 export function createSupabaseClient(accessToken) {
-  if (!supabaseUrl || !supabaseKey) {
+  if (!supabaseUrl || !supabasePublicKey) {
     return createClient("", "");
   }
 
-  return createClient(supabaseUrl, supabaseKey, {
+  return createClient(supabaseUrl, supabasePublicKey, {
     global: {
       headers: {
         Authorization: `Bearer ${accessToken}`,

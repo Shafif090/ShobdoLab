@@ -3,6 +3,7 @@ import type { AuthSession } from "./api";
 const AUTH_KEY = "shobdolab.auth-session";
 const QUIZ_SESSION_KEY = "shobdolab.quiz-session-id";
 const SESSION_MESSAGE_KEY = "shobdolab.session-message";
+const SESSION_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 
 function readStorage(key: string) {
   if (typeof window === "undefined") {
@@ -28,12 +29,25 @@ function removeStorage(key: string) {
   window.localStorage.removeItem(key);
 }
 
-export function saveAuthSession(session: AuthSession) {
+export function saveAuthSession(
+  session: AuthSession,
+  options: { preserveSessionExpiresAt?: boolean } = {},
+) {
   const expiresAt =
     session.expiresAt ??
     (session.expiresIn ? Date.now() + session.expiresIn * 1000 : null);
+  const currentSession = options.preserveSessionExpiresAt
+    ? loadAuthSession()
+    : null;
+  const sessionExpiresAt =
+    session.sessionExpiresAt ??
+    currentSession?.sessionExpiresAt ??
+    Date.now() + SESSION_MAX_AGE_MS;
 
-  writeStorage(AUTH_KEY, JSON.stringify({ ...session, expiresAt }));
+  writeStorage(
+    AUTH_KEY,
+    JSON.stringify({ ...session, expiresAt, sessionExpiresAt }),
+  );
   removeStorage(SESSION_MESSAGE_KEY);
 }
 
@@ -56,7 +70,16 @@ export function getAccessToken() {
     return null;
   }
 
-  if (session.expiresAt && Date.now() >= session.expiresAt - 30000) {
+  if (session.sessionExpiresAt && Date.now() >= session.sessionExpiresAt) {
+    expireAuthSession();
+    return null;
+  }
+
+  if (
+    session.expiresAt &&
+    Date.now() >= session.expiresAt - 30000 &&
+    !session.refreshToken
+  ) {
     expireAuthSession();
     return null;
   }

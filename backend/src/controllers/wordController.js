@@ -1,11 +1,12 @@
 import { supabase } from "../lib/supabaseClient.js";
-import {
-  createQuizSessionFromWords,
-  getWordsByIds,
-  normalizeQuizMode,
-} from "./quizSessionBuilder.js";
 import { nextReviewAtForStrength } from "./progressEngine.js";
 import { formatAnswerList, getAcceptedAnswers } from "./quizResponse.js";
+
+const DICTIONARY_WORD_SELECT =
+  "id, english, bangla, pos, root, family_id, is_active, created_at";
+const DICTIONARY_SORTS = new Set(["az", "za", "strength_high", "strength_low"]);
+const STRENGTH_SORT_PAGE_SIZE = 1000;
+const USER_PROGRESS_PAGE_SIZE = 1000;
 
 function jsonError(res, status, code, message, details = null) {
   return res.status(status).json({
@@ -57,6 +58,77 @@ function safeSearchTerm(value) {
     .slice(0, 80);
 }
 
+function normalizeDictionarySort(value) {
+  const sort = String(value ?? "az");
+  return DICTIONARY_SORTS.has(sort) ? sort : "az";
+}
+
+function applyDictionarySearch(query, queryText) {
+  if (!queryText) {
+    return query;
+  }
+
+  const pattern = `%${queryText}%`;
+  return query.or(
+    `english.ilike.${pattern},root.ilike.${pattern},family_id.ilike.${pattern}`,
+  );
+}
+
+function createDictionaryQuery(db, queryText, options = {}) {
+  const { count = undefined } = options;
+  let query = db
+    .from("words")
+    .select(DICTIONARY_WORD_SELECT, count ? { count } : undefined)
+    .eq("is_active", true);
+
+  return applyDictionarySearch(query, queryText);
+}
+
+function compareEnglish(left, right, direction = 1) {
+  return (
+    direction *
+    String(left.english ?? "").localeCompare(String(right.english ?? ""), undefined, {
+      sensitivity: "base",
+    })
+  );
+}
+
+function progressStrength(progressByWordId, wordId) {
+  return Number(progressByWordId.get(wordId)?.strength ?? 0);
+}
+
+async function fetchAllMatchingDictionaryWords(db, queryText) {
+  const words = [];
+  let total = null;
+  let from = 0;
+
+  while (total === null || from < total) {
+    const to = from + STRENGTH_SORT_PAGE_SIZE - 1;
+    const { data, error, count } = await createDictionaryQuery(db, queryText, {
+      count: total === null ? "exact" : undefined,
+    })
+      .order("english", { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    if (total === null) {
+      total = count ?? 0;
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    words.push(...data);
+    from += data.length;
+  }
+
+  return { words, total: total ?? words.length };
+}
+
 async function getProgressByWordId(db, userId, wordIds) {
   const ids = [...new Set(wordIds.filter(Boolean))];
   if (ids.length === 0) {
@@ -78,6 +150,41 @@ async function getProgressByWordId(db, userId, wordIds) {
   return new Map((data || []).map((row) => [row.word_id, row]));
 }
 
+async function getAllUserProgressByWordId(db, userId) {
+  const rows = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + USER_PROGRESS_PAGE_SIZE - 1;
+    const { data, error } = await db
+      .from("user_words")
+      .select(
+        "word_id, status, strength, mistakes, correct_count, seen_count, last_seen_at, next_review_at, created_at, updated_at",
+      )
+      .eq("user_id", userId)
+      .order("word_id", { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      break;
+    }
+
+    rows.push(...data);
+
+    if (data.length < USER_PROGRESS_PAGE_SIZE) {
+      break;
+    }
+
+    from += data.length;
+  }
+
+  return new Map(rows.map((row) => [row.word_id, row]));
+}
+
 async function getWordOrError(db, wordId) {
   const { data, error } = await db
     .from("words")
@@ -97,27 +204,47 @@ export async function searchWords(req, res) {
   try {
     const db = req.supabase || supabase;
     const queryText = safeSearchTerm(req.query.q);
+    const sort = normalizeDictionarySort(req.query.sort);
     const page = Math.max(1, Number(req.query.page) || 1);
     const limit = Math.max(1, Math.min(Number(req.query.limit) || 20, 50));
     const from = (page - 1) * limit;
     const to = from + limit - 1;
 
-    let query = db
-      .from("words")
-      .select("id, english, bangla, pos, root, family_id, is_active, created_at", {
-        count: "exact",
-      })
-      .eq("is_active", true);
+    if (sort === "strength_high" || sort === "strength_low") {
+      const { words, total } = await fetchAllMatchingDictionaryWords(db, queryText);
+      const progressByWordId = await getAllUserProgressByWordId(db, req.userId);
 
-    if (queryText) {
-      const pattern = `%${queryText}%`;
-      query = query.or(
-        `english.ilike.${pattern},root.ilike.${pattern},family_id.ilike.${pattern}`,
+      const direction = sort === "strength_high" ? -1 : 1;
+      const sortedWords = words.sort((left, right) => {
+        const strengthDifference =
+          progressStrength(progressByWordId, left.id) -
+          progressStrength(progressByWordId, right.id);
+
+        return strengthDifference !== 0
+          ? direction * strengthDifference
+          : compareEnglish(left, right);
+      });
+
+      const pageWords = sortedWords.slice(from, to + 1);
+      const items = pageWords.map((word) =>
+        wordPayload(word, progressByWordId.get(word.id) || null),
       );
+
+      return res.json({
+        items,
+        query: queryText,
+        sort,
+        page,
+        limit,
+        total,
+        hasMore: to + 1 < total,
+      });
     }
 
-    const { data, error, count } = await query
-      .order("english", { ascending: true })
+    const { data, error, count } = await createDictionaryQuery(db, queryText, {
+      count: "exact",
+    })
+      .order("english", { ascending: sort === "az" })
       .range(from, to);
 
     if (error) {
@@ -136,6 +263,7 @@ export async function searchWords(req, res) {
     return res.json({
       items,
       query: queryText,
+      sort,
       page,
       limit,
       total: count ?? items.length,
@@ -223,60 +351,6 @@ export async function addWordToUser(req, res) {
       500,
       "ADD_WORD_FAILED",
       error.message || "Failed to add this word.",
-    );
-  }
-}
-
-export async function practiceWord(req, res) {
-  try {
-    const db = req.supabase || supabase;
-    const wordId = Number(req.params.wordId);
-    const mode = normalizeQuizMode(req.body?.mode, "mixed");
-
-    if (!Number.isInteger(wordId) || wordId <= 0) {
-      return jsonError(
-        res,
-        400,
-        "INVALID_WORD_ID",
-        "Word id must be a positive number.",
-      );
-    }
-
-    const selectedWords = await getWordsByIds(db, [wordId]);
-    if (selectedWords.length === 0) {
-      return jsonError(res, 404, "WORD_NOT_FOUND", "Word was not found.");
-    }
-
-    const createdSession = await createQuizSessionFromWords({
-      db,
-      userId: req.userId,
-      source: "exercise",
-      mode,
-      words: selectedWords,
-    });
-
-    if (!createdSession) {
-      return jsonError(
-        res,
-        404,
-        "NO_WORDS_AVAILABLE",
-        "No words were available to practice.",
-      );
-    }
-
-    return res.status(201).json({
-      quizSessionId: createdSession.session.id,
-      mode,
-      totalItems: createdSession.session.total_items,
-      session: createdSession.session,
-      firstItem: createdSession.firstItem,
-    });
-  } catch (error) {
-    return jsonError(
-      res,
-      500,
-      "PRACTICE_WORD_FAILED",
-      error.message || "Failed to start word practice.",
     );
   }
 }

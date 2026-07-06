@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { router } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
-import { AppIcon, Skeleton, TabScreen } from "@/components";
+import { AppIcon, Skeleton, SpeakerButton, TabScreen } from "@/components";
 import { formatWordList } from "@/lib/format";
 import {
   ApiError,
@@ -11,7 +11,7 @@ import {
   getCurrentSet,
   type LearningSetResponse,
 } from "@/lib/api";
-import { getAccessToken } from "@/lib/session";
+import { getAccessToken, saveQuizSessionId } from "@/lib/session";
 
 export default function LearnTab() {
   const [currentSet, setCurrentSet] = useState<
@@ -87,6 +87,12 @@ export default function LearnTab() {
 
     try {
       const response = await createNextSet(token);
+      if ("session" in response && response.status === "exam_required") {
+        await saveQuizSessionId(response.session.id);
+        router.push("/quiz");
+        return;
+      }
+
       setCurrentSet(response.set);
     } catch (exception) {
       if (exception instanceof ApiError) {
@@ -235,13 +241,8 @@ export default function LearnTab() {
               ))
             : liveWords.length > 0 ? (
               liveWords.map((word) => (
-                <Pressable
+                <View
                   key={word.english}
-                  onPress={() => {
-                    if (word.wordId) {
-                      router.push(`/word/${word.wordId}`);
-                    }
-                  }}
                   style={{
                     borderRadius: 20,
                     backgroundColor: Colors.surface,
@@ -261,15 +262,32 @@ export default function LearnTab() {
                       gap: 12,
                       alignItems: "flex-start",
                     }}>
-                    <Text
+                    <View
                       style={{
-                        fontSize: 26,
-                        fontWeight: "800",
-                        color: Colors.text,
                         flex: 1,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 10,
                       }}>
-                      {word.english}
-                    </Text>
+                      <Pressable
+                        disabled={!word.wordId}
+                        onPress={() => {
+                          if (word.wordId) {
+                            router.push(`/word/${word.wordId}`);
+                          }
+                        }}>
+                        <Text
+                          style={{
+                            fontSize: 26,
+                            fontWeight: "800",
+                            color: Colors.text,
+                          }}>
+                          {word.english}
+                        </Text>
+                      </Pressable>
+                      <SpeakerButton text={word.english} />
+                    </View>
                     <Text
                       style={{
                         paddingHorizontal: 8,
@@ -284,7 +302,12 @@ export default function LearnTab() {
                       {formatWordList(word.pos)}
                     </Text>
                   </View>
-                  <View
+                  <Pressable
+                    onPress={() => {
+                      if (word.wordId) {
+                        router.push(`/word/${word.wordId}`);
+                      }
+                    }}
                     style={{
                       marginTop: 14,
                       paddingTop: 14,
@@ -299,8 +322,8 @@ export default function LearnTab() {
                       }}>
                       {formatWordList(word.bangla)}
                     </Text>
-                  </View>
-                </Pressable>
+                  </Pressable>
+                </View>
               ))
             ) : (
               <View

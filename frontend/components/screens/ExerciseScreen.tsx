@@ -7,7 +7,6 @@ import { Icon } from "@/components/icons";
 import { Skeleton } from "@/components/ui";
 import {
   ApiError,
-  getCurrentSet,
   getExerciseMeta,
   startExerciseSession,
   type ExerciseMetaResponse,
@@ -50,15 +49,12 @@ export function ExerciseScreen() {
   const [mode, setMode] = useState<keyof typeof modes>("mixed");
   const current = modes[mode];
   const [meta, setMeta] = useState<ExerciseMetaResponse | null>(null);
-  const [syncMessage, setSyncMessage] = useState(
-    "Sign in to sync your current learning set.",
-  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
 
-    async function loadCurrentSet() {
+    async function loadExerciseMeta() {
       const token = getAccessToken();
       if (!token) {
         setLoading(false);
@@ -66,25 +62,16 @@ export function ExerciseScreen() {
       }
 
       try {
-        const [setResponse, metaResponse] = await Promise.all([
-          getCurrentSet(token),
-          getExerciseMeta(token),
-        ]);
+        const metaResponse = await getExerciseMeta(token);
         if (!active) return;
 
         setMeta(metaResponse);
-        setSyncMessage(
-          `Live set #${setResponse.set.set_index} with ${setResponse.set.total_words} words ready`,
-        );
       } catch (exception) {
         if (!active) return;
 
         if (exception instanceof ApiError && exception.status === 401) {
-          setSyncMessage("Your session expired. Sign in again to sync.");
           return;
         }
-
-        setSyncMessage("Unable to load your live set right now.");
       } finally {
         if (active) {
           setLoading(false);
@@ -92,7 +79,7 @@ export function ExerciseScreen() {
       }
     }
 
-    void loadCurrentSet();
+    void loadExerciseMeta();
 
     return () => {
       active = false;
@@ -123,9 +110,9 @@ export function ExerciseScreen() {
 
   return (
     <AppShell active="exercise" title="Exercise">
-      <div className="mx-auto flex w-full max-w-xl flex-col gap-8">
-        <div className="mt-4 text-center">
-          <h2 className="text-3xl font-extrabold text-slate-900">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 sm:gap-8">
+        <div className="text-center sm:mt-2">
+          <h2 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">
             Ready to Practice?
           </h2>
           <p className="mt-1 text-sm text-slate-500">
@@ -139,7 +126,7 @@ export function ExerciseScreen() {
               key={item}
               type="button"
               onClick={() => setMode(item)}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-full py-3 text-sm transition ${
+              className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-2.5 text-xs transition sm:gap-2 sm:py-3 sm:text-sm ${
                 item === mode
                   ? "bg-white font-bold text-slate-900 shadow-sm"
                   : "font-medium text-slate-500 hover:text-slate-900"
@@ -153,17 +140,7 @@ export function ExerciseScreen() {
           ))}
         </div>
 
-        <div className="rounded-3xl border border-[rgba(161,232,175,0.25)] bg-[rgba(161,232,175,0.12)] p-4 text-sm font-medium text-slate-700">
-          {loading ? (
-            <Skeleton className="h-5 w-3/4" />
-          ) : (
-            <>
-              {syncMessage}
-            </>
-          )}
-        </div>
-
-        <div className="relative mt-4 flex flex-col items-center gap-6 overflow-hidden rounded-[20px] border border-slate-100 bg-white p-8 text-center shadow-soft">
+        <div className="relative flex flex-col items-center gap-5 overflow-hidden rounded-[20px] border border-slate-100 bg-white p-5 text-center shadow-soft sm:mt-2 sm:gap-6 sm:p-8">
           <div className="relative z-10 flex h-24 w-24 items-center justify-center rounded-full border border-slate-50 bg-(--brand-bg) shadow-inner">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-(--brand-blue) shadow-sm">
               <Icon

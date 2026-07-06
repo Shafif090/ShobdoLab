@@ -1,8 +1,10 @@
 import {
   authSupabase,
+  createAuthSupabaseClient,
   getSupabaseConfigStatus,
   supabase,
 } from "../lib/supabaseClient.js";
+import { env } from "../config/env.js";
 
 function badRequest(res, code, message, details = null) {
   return res.status(400).json({
@@ -50,6 +52,14 @@ function normalizeRedirectTo(value) {
   } catch {
     return null;
   }
+}
+
+function normalizeEmail(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function getPasswordResetRedirectTo(value) {
+  return normalizeRedirectTo(value) || env.passwordResetRedirectUrl || null;
 }
 
 function getDisplayName(user) {
@@ -204,6 +214,154 @@ export async function login(req, res) {
       email: data.user.email,
     },
   });
+}
+
+export async function forgotPassword(req, res) {
+  const email = normalizeEmail(req.body?.email);
+  const redirectTo = getPasswordResetRedirectTo(req.body?.redirectTo);
+
+  if (!email) {
+    return badRequest(res, "EMAIL_REQUIRED", "email is required.");
+  }
+
+  if (!redirectTo) {
+    return badRequest(
+      res,
+      "RESET_REDIRECT_REQUIRED",
+      "A password reset redirect URL must be configured.",
+    );
+  }
+
+  const { error } = await authSupabase.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+
+  if (isSupabaseNetworkError(error)) {
+    return authServiceUnavailable(
+      res,
+      "Unable to reach Supabase Auth. Check the backend network connection and Supabase environment variables.",
+    );
+  }
+
+  if (error) {
+    return res.status(400).json({
+      error: {
+        code: "PASSWORD_RESET_FAILED",
+        message: error.message || "Unable to send password reset email.",
+        details: null,
+      },
+    });
+  }
+
+  return res.json({
+    ok: true,
+    message: "If an account exists for that email, a reset link has been sent.",
+  });
+}
+
+export async function resetPassword(req, res) {
+  const { accessToken, refreshToken, password } = req.body || {};
+
+  if (!accessToken || !refreshToken || !password) {
+    return badRequest(
+      res,
+      "RESET_TOKEN_PASSWORD_REQUIRED",
+      "accessToken, refreshToken, and password are required.",
+    );
+  }
+
+  if (String(password).length < 6) {
+    return badRequest(
+      res,
+      "WEAK_PASSWORD",
+      "password must be at least 6 characters.",
+    );
+  }
+
+  const resetClient = createAuthSupabaseClient();
+  const { data: sessionData, error: sessionError } =
+    await resetClient.auth.setSession({
+      access_token: accessToken,
+      refresh_token: refreshToken,
+    });
+
+  if (isSupabaseNetworkError(sessionError)) {
+    return authServiceUnavailable(
+      res,
+      "Unable to reach Supabase Auth. Check the backend network connection and Supabase environment variables.",
+    );
+  }
+
+  if (sessionError || !sessionData?.session || !sessionData?.user) {
+    return res.status(401).json({
+      error: {
+        code: "RESET_TOKEN_INVALID",
+        message: sessionError?.message || "This password reset link is invalid or expired.",
+        details: null,
+      },
+    });
+  }
+
+  const { error } = await resetClient.auth.updateUser({ password });
+
+  if (isSupabaseNetworkError(error)) {
+    return authServiceUnavailable(
+      res,
+      "Unable to reach Supabase Auth. Check the backend network connection and Supabase environment variables.",
+    );
+  }
+
+  if (error) {
+    return res.status(400).json({
+      error: {
+        code: "PASSWORD_UPDATE_FAILED",
+        message: error.message || "Unable to update password.",
+        details: null,
+      },
+    });
+  }
+
+  return res.json({
+    ok: true,
+    message: "Password updated. Please sign in with your new password.",
+  });
+}
+
+export async function refreshSession(req, res) {
+  const { refreshToken } = req.body || {};
+
+  if (!refreshToken) {
+    return badRequest(
+      res,
+      "REFRESH_TOKEN_REQUIRED",
+      "refreshToken is required.",
+    );
+  }
+
+  const { data, error } = await authSupabase.auth.refreshSession({
+    refresh_token: refreshToken,
+  });
+
+  if (isSupabaseNetworkError(error)) {
+    return authServiceUnavailable(
+      res,
+      "Unable to reach Supabase Auth. Check the backend network connection and Supabase environment variables.",
+    );
+  }
+
+  if (error || !data?.session || !data?.user) {
+    return res.status(401).json({
+      error: {
+        code: "REFRESH_FAILED",
+        message: error?.message || "Unable to refresh this session.",
+        details: null,
+      },
+    });
+  }
+
+  await ensureUserProfile(data.user);
+
+  return res.json(buildAuthSession(data.session, data.user));
 }
 
 export async function googleAuthUrl(req, res) {

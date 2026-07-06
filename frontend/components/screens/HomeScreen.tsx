@@ -40,16 +40,17 @@ function ProgressStat({
   }[tone];
 
   return (
-    <div className={`flex items-center gap-4 rounded-2xl border p-4 ${tones.card}`}>
+    <div
+      className={`flex min-h-[86px] items-center gap-3 rounded-2xl border p-3.5 sm:gap-4 sm:p-4 ${tones.card}`}>
       <div
-        className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-2 border-white/60 ${tones.icon}`}>
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 border-white/60 sm:h-11 sm:w-11 ${tones.icon}`}>
         <Icon name={icon} className="text-base" />
       </div>
       <div>
         {loading ? (
           <Skeleton className="mb-2 h-8 w-12" />
         ) : (
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="text-xl font-bold sm:text-2xl">{value}</p>
         )}
         <p className="text-xs font-medium text-slate-600">{label}</p>
       </div>
@@ -94,17 +95,17 @@ export function HomeScreen() {
   }, []);
 
   const wordsLearned = summary?.wordsLearnedTotal ?? 0;
-  const dueTomorrow = summary?.dueTomorrowCount ?? 0;
+  const dueToday = summary?.dueTodayCount ?? summary?.dueTomorrowCount ?? 0;
   const streakDays = summary?.streakDays ?? 0;
 
   return (
     <AppShell active="home" title="Home">
-      <div className="mx-auto flex w-full max-w-2xl flex-col gap-8">
+      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 sm:gap-8">
         <section className="flex flex-col gap-3">
           <h2 className="text-[15px] font-semibold uppercase tracking-[0.18em] text-slate-500">
             Today&apos;s Progress
           </h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             <ProgressStat
               icon="fire"
               value={streakDays}
@@ -121,8 +122,8 @@ export function HomeScreen() {
             />
             <ProgressStat
               icon="calendar"
-              value={dueTomorrow}
-              label="Due Tomorrow"
+              value={dueToday}
+              label="Due Today"
               loading={loading}
               tone="blue"
             />

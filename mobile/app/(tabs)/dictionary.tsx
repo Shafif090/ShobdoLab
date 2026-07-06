@@ -8,18 +8,20 @@ import { AppIcon, Skeleton, TabScreen } from "@/components";
 import {
   addWord,
   ApiError,
-  practiceWord,
   searchWords,
+  type DictionarySort,
   type DictionaryWord,
 } from "@/lib/api";
-import {
-  clearQuizSessionId,
-  getAccessToken,
-  saveQuizSessionId,
-} from "@/lib/session";
+import { getAccessToken } from "@/lib/session";
+
+const sortOptions: { value: DictionarySort; label: string }[] = [
+  { value: "az", label: "A-Z" },
+  { value: "za", label: "Z-A" },
+];
 
 export default function DictionaryTab() {
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<DictionarySort>("az");
   const [words, setWords] = useState<DictionaryWord[]>([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -31,7 +33,7 @@ export default function DictionaryTab() {
   const loadingMoreRef = useRef(false);
 
   const loadWords = useCallback(
-    async (nextPage: number, nextQuery = query) => {
+    async (nextPage: number, nextQuery = query, nextSort = sort) => {
       if (nextPage > 1 && loadingMoreRef.current) return;
 
       const token = await getAccessToken();
@@ -49,7 +51,7 @@ export default function DictionaryTab() {
       setError(null);
 
       try {
-        const response = await searchWords(token, nextQuery, nextPage, 20);
+        const response = await searchWords(token, nextQuery, nextPage, 20, nextSort);
         setWords((current) =>
           nextPage === 1 ? response.items : [...current, ...response.items],
         );
@@ -68,16 +70,16 @@ export default function DictionaryTab() {
         loadingMoreRef.current = false;
       }
     },
-    [query],
+    [query, sort],
   );
 
   useEffect(() => {
     const timeout = setTimeout(() => {
-      void loadWords(1, query);
-    }, 250);
+      void loadWords(1, query, sort);
+    }, 500);
 
     return () => clearTimeout(timeout);
-  }, [loadWords, query]);
+  }, [loadWords, query, sort]);
 
   async function addSelectedWord(wordId: string) {
     const token = await getAccessToken();
@@ -101,32 +103,6 @@ export default function DictionaryTab() {
         exception instanceof ApiError
           ? exception.message
           : "Unable to add this word right now.",
-      );
-    } finally {
-      setBusyWordId(null);
-    }
-  }
-
-  async function startPractice(wordId: string) {
-    const token = await getAccessToken();
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
-
-    setBusyWordId(wordId);
-    setError(null);
-
-    try {
-      const response = await practiceWord(token, wordId, "mixed");
-      await saveQuizSessionId(response.session.id);
-      router.push("/typing");
-    } catch (exception) {
-      await clearQuizSessionId();
-      setError(
-        exception instanceof ApiError
-          ? exception.message
-          : "Unable to start practice right now.",
       );
     } finally {
       setBusyWordId(null);
@@ -168,7 +144,7 @@ export default function DictionaryTab() {
                   fontWeight: "600",
                   lineHeight: 20,
                 }}>
-                Search all words, add them to your list, or practice one now.
+                Search all words and add the useful ones to your list.
               </Text>
             </View>
             <Text
@@ -224,6 +200,33 @@ export default function DictionaryTab() {
                 }}
               />
             </View>
+          </View>
+
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {sortOptions.map((option) => {
+              const active = sort === option.value;
+
+              return (
+                <Pressable
+                  key={option.value}
+                  onPress={() => setSort(option.value)}
+                  style={{
+                    borderRadius: 999,
+                    backgroundColor: active ? Colors.text : "#F1F5F9",
+                    paddingHorizontal: 12,
+                    paddingVertical: 7,
+                  }}>
+                  <Text
+                    style={{
+                      color: active ? "#FFFFFF" : Colors.muted,
+                      fontSize: 11,
+                      fontWeight: "800",
+                    }}>
+                    {option.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
         </View>
 
@@ -331,12 +334,6 @@ export default function DictionaryTab() {
                     </Text>
                   </Pressable>
                   <Pressable
-                    onPress={() => void startPractice(word.wordId)}
-                    disabled={busyWordId === word.wordId}
-                    style={[actionButtonStyle, { backgroundColor: Colors.text }]}>
-                    <Text style={actionButtonTextLight}>Practice</Text>
-                  </Pressable>
-                  <Pressable
                     onPress={() => router.push(`/word/${word.wordId}`)}
                     style={[
                       actionButtonStyle,
@@ -379,7 +376,7 @@ export default function DictionaryTab() {
 
         {hasMore ? (
           <Pressable
-            onPress={() => void loadWords(page + 1)}
+            onPress={() => void loadWords(page + 1, query, sort)}
             disabled={loadingMore}
             style={{
               minHeight: 52,
@@ -422,12 +419,6 @@ const actionButtonStyle = {
 
 const actionButtonTextDark = {
   color: Colors.text,
-  fontSize: 12,
-  fontWeight: "800" as const,
-};
-
-const actionButtonTextLight = {
-  color: "#FFFFFF",
   fontSize: 12,
   fontWeight: "800" as const,
 };

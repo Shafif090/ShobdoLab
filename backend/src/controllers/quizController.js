@@ -18,6 +18,8 @@ import {
   quizSessionPayload,
 } from "./quizResponse.js";
 
+const LEARN_SET_PASS_PERCENT = 75;
+
 function jsonError(res, status, code, message, details = null) {
   return res.status(status).json({
     error: {
@@ -98,6 +100,32 @@ async function getSessionAttempts(db, sessionId) {
   return data || [];
 }
 
+function isNextSetGateSession(session) {
+  return (
+    session?.source === "learn" &&
+    session?.mode === "mcq" &&
+    Boolean(session?.source_ref_id)
+  );
+}
+
+function normalizeResponseTimeMs(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return null;
+  }
+
+  return Math.min(Math.round(parsed), 24 * 60 * 60 * 1000);
+}
+
+function sumAttemptResponseTimes(attempts) {
+  return (attempts || []).reduce((total, attempt) => {
+    const responseTime = Number(attempt.response_time_ms);
+    return Number.isFinite(responseTime) && responseTime > 0
+      ? total + responseTime
+      : total;
+  }, 0);
+}
+
 async function getCurrentQuizItem(db, session) {
   const items = await getSessionItems(db, session.id);
   const currentItem = items[session.current_index] || null;
@@ -113,8 +141,7 @@ async function maybeCompleteLearnSet(db, userId, session) {
     session.total_items > 0
       ? Math.round((session.correct_items / session.total_items) * 100)
       : 0;
-  const shouldComplete =
-    scorePercent >= 80 || session.retry_no >= session.max_retries;
+  const shouldComplete = scorePercent >= LEARN_SET_PASS_PERCENT;
 
   if (!shouldComplete) {
     return;
@@ -226,6 +253,7 @@ export async function submitQuizAnswer(req, res) {
     }
 
     const wasCorrect = isCorrectAnswer(answer, currentItem.accepted_answers);
+    const answerResponseTimeMs = normalizeResponseTimeMs(responseTimeMs);
     const now = new Date();
 
     const { error: attemptError } = await db.from("quiz_attempts").insert({
@@ -234,7 +262,7 @@ export async function submitQuizAnswer(req, res) {
       word_id: currentItem.word_id,
       user_answer: answer ?? null,
       is_correct: wasCorrect,
-      response_time_ms: responseTimeMs ?? null,
+      response_time_ms: answerResponseTimeMs,
       submitted_at: now.toISOString(),
     });
 
@@ -274,9 +302,16 @@ export async function submitQuizAnswer(req, res) {
     const nextCurrentIndex = session.current_index + 1;
     const completed = nextCurrentIndex >= session.total_items;
     const endedAt = completed ? now.toISOString() : session.ended_at;
-    const durationMs = completed
+    const serverDurationMs = completed
       ? Math.max(0, now.getTime() - new Date(session.started_at).getTime())
       : session.duration_ms;
+    let durationMs = serverDurationMs;
+
+    if (completed) {
+      const attemptsForDuration = await getSessionAttempts(db, session.id);
+      const clientDurationMs = sumAttemptResponseTimes(attemptsForDuration);
+      durationMs = Math.max(serverDurationMs || 0, clientDurationMs);
+    }
 
     const { data: updatedSession, error: sessionUpdateError } = await db
       .from("quiz_sessions")
@@ -472,10 +507,20 @@ export async function getQuizResult(req, res) {
     const durationSec = session.duration_ms
       ? Math.round(session.duration_ms / 1000)
       : 0;
+    const nextSetGate = isNextSetGateSession(session)
+      ? {
+          passed: scorePercent >= LEARN_SET_PASS_PERCENT,
+          passPercent: LEARN_SET_PASS_PERCENT,
+          statusText:
+            scorePercent >= LEARN_SET_PASS_PERCENT
+              ? "Next set unlocked"
+              : `Score ${LEARN_SET_PASS_PERCENT}% to unlock`,
+        }
+      : null;
     const canRetry =
       session.status === "completed" &&
       session.retry_no < session.max_retries &&
-      (session.source !== "learn" || scorePercent < 80);
+      (session.source !== "learn" || scorePercent < LEARN_SET_PASS_PERCENT);
 
     return res.json({
       sessionId: session.id,
@@ -495,6 +540,7 @@ export async function getQuizResult(req, res) {
       },
       incorrectItems,
       breakdown,
+      nextSetGate,
       canRetry,
       retryAction: {
         endpoint: `/v1/quiz/${session.id}/retry`,
@@ -536,11 +582,6 @@ export async function retryQuizSession(req, res) {
             .filter((attempt) => !attempt.is_correct)
             .map((attempt) => attempt.word_id),
         });
-        await db
-          .from("learning_sets")
-          .update({ state: "completed" })
-          .eq("id", session.source_ref_id)
-          .eq("user_id", req.userId);
       }
 
       return jsonError(
@@ -567,7 +608,7 @@ export async function retryQuizSession(req, res) {
           ? Math.round((session.correct_items / session.total_items) * 100)
           : 0;
 
-      if (scorePercent >= 80) {
+      if (scorePercent >= LEARN_SET_PASS_PERCENT) {
         await maybeCompleteLearnSet(db, req.userId, session);
         return jsonError(
           res,

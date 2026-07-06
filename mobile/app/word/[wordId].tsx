@@ -4,7 +4,13 @@ import { router, useLocalSearchParams } from "expo-router";
 import { Colors } from "@/constants/theme";
 import { formatWordList } from "@/lib/format";
 import { AppText as Text } from "@/components/app-typography";
-import { AppHeader, AppIcon, Screen, Skeleton } from "@/components";
+import {
+  AppHeader,
+  AppIcon,
+  Screen,
+  Skeleton,
+  SpeakerButton,
+} from "@/components";
 import { ApiError, getWordDetail, type WordDetailResponse } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
@@ -34,6 +40,12 @@ export default function WordDetailScreen() {
     let active = true;
 
     async function loadDetail() {
+      if (!wordId) {
+        setError("Unable to find this word.");
+        setLoading(false);
+        return;
+      }
+
       const token = await getAccessToken();
       if (!token) {
         router.replace("/login");
@@ -60,9 +72,7 @@ export default function WordDetailScreen() {
       }
     }
 
-    if (wordId) {
-      void loadDetail();
-    }
+    void loadDetail();
 
     return () => {
       active = false;
@@ -127,14 +137,23 @@ export default function WordDetailScreen() {
                   alignItems: "flex-start",
                 }}>
                 <View style={{ flex: 1 }}>
-                  <Text
+                  <View
                     style={{
-                      fontSize: 34,
-                      fontWeight: "800",
-                      color: Colors.text,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      flexWrap: "wrap",
+                      gap: 10,
                     }}>
-                    {detail.word.english}
-                  </Text>
+                    <Text
+                      style={{
+                        fontSize: 34,
+                        fontWeight: "800",
+                        color: Colors.text,
+                      }}>
+                      {detail.word.english}
+                    </Text>
+                    <SpeakerButton text={detail.word.english} />
+                  </View>
                   <Text
                     style={{
                       marginTop: 8,

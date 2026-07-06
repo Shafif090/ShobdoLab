@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { AppShell } from "@/components/app-shell";
 import { formatWordList } from "@/lib/format";
 import { Icon } from "@/components/icons";
-import { Skeleton } from "@/components/ui";
+import { Skeleton, SpeakerButton } from "@/components/ui";
 import { ApiError, getWordDetail, type WordDetailResponse } from "@/lib/api";
 import { getAccessToken } from "@/lib/session";
 
@@ -106,9 +106,12 @@ export function WordDetailScreen() {
             <>
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <h2 className="break-words text-4xl font-black tracking-tight text-slate-900">
-                    {detail.word.english}
-                  </h2>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h2 className="break-words text-4xl font-black tracking-tight text-slate-900">
+                      {detail.word.english}
+                    </h2>
+                    <SpeakerButton text={detail.word.english} />
+                  </div>
                   <p className="mt-2 text-2xl font-extrabold text-teal-700">
                     {formatWordList(detail.word.bangla)}
                   </p>
