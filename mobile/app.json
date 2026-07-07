@@ -10,14 +10,12 @@
     "newArchEnabled": true,
     "ios": {
       "bundleIdentifier": "com.shafi.shobdolab",
-      "buildNumber": "1",
       "supportsTablet": true
     },
     "android": {
       "package": "com.shafi.shobdolab",
-      "versionCode": 1,
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#F47C7C",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -50,6 +48,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "018c4307-3c36-42c9-94b6-3f03f0b96750"
+      }
     }
   }
 }
