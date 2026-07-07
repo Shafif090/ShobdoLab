@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "shobdolab_mobile",
-    "slug": "shobdolab_mobile",
+    "name": "ShobdoLab",
+    "slug": "shobdolab",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -9,9 +9,13 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "bundleIdentifier": "com.shafi.shobdolab",
+      "buildNumber": "1",
       "supportsTablet": true
     },
     "android": {
+      "package": "com.shafi.shobdolab",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

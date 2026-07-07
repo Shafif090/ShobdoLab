@@ -3,6 +3,7 @@ import { FontAwesome6 } from "@expo/vector-icons";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
+import Head from "expo-router/head";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { Platform } from "react-native";
@@ -84,6 +85,9 @@ html, body {
 
   return (
     <>
+      <Head>
+        <title>ShobdoLab</title>
+      </Head>
       <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
         <Stack.Screen name="index" />
         <Stack.Screen name="login" />
