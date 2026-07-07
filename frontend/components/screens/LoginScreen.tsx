@@ -10,7 +10,11 @@ import {
   getGoogleAuthUrl,
   login as loginRequest,
 } from "@/lib/api";
-import { consumeSessionMessage, saveAuthSession } from "@/lib/session";
+import {
+  consumeSessionMessage,
+  getAccessToken,
+  saveAuthSession,
+} from "@/lib/session";
 
 export function LoginScreen() {
   const router = useRouter();
@@ -22,11 +26,16 @@ export function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (getAccessToken()) {
+      router.replace("/home");
+      return;
+    }
+
     const message = consumeSessionMessage();
     if (message) {
       setError(message);
     }
-  }, []);
+  }, [router]);
 
   async function handleLogin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

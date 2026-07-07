@@ -1,5 +1,24 @@
-import { Redirect } from "expo-router";
+import { router } from "expo-router";
+import { useEffect } from "react";
+import { getAccessToken } from "@/lib/session";
 
 export default function IndexScreen() {
-  return <Redirect href="/login" />;
+  useEffect(() => {
+    let active = true;
+
+    async function redirectFromRoot() {
+      const token = await getAccessToken();
+      if (!active) return;
+
+      router.replace(token ? "/(tabs)" : "/login");
+    }
+
+    void redirectFromRoot();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return null;
 }

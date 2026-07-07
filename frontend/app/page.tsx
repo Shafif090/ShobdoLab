@@ -1,5 +1,15 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getAccessToken } from "@/lib/session";
 
 export default function Page() {
-  redirect("/login");
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace(getAccessToken() ? "/home" : "/login");
+  }, [router]);
+
+  return null;
 }

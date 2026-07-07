@@ -14,7 +14,11 @@ import {
 } from "@/components";
 import { ApiError, login as loginRequest } from "@/lib/api";
 import { getOAuthErrorMessage, signInWithGoogle } from "@/lib/oauth";
-import { consumeSessionMessage, saveAuthSession } from "@/lib/session";
+import {
+  consumeSessionMessage,
+  getAccessToken,
+  saveAuthSession,
+} from "@/lib/session";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -27,14 +31,22 @@ export default function LoginScreen() {
   useEffect(() => {
     let active = true;
 
-    async function loadSessionMessage() {
+    async function prepareLoginScreen() {
+      const token = await getAccessToken();
+      if (!active) return;
+
+      if (token) {
+        router.replace("/(tabs)");
+        return;
+      }
+
       const message = await consumeSessionMessage();
       if (active && message) {
         setError(message);
       }
     }
 
-    void loadSessionMessage();
+    void prepareLoginScreen();
 
     return () => {
       active = false;
