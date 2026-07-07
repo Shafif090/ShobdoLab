@@ -37,6 +37,10 @@ const inter = localFont({
 export const metadata: Metadata = {
   title: "ShobdoLab",
   description: "Web frontend for ShobdoLab",
+  icons: {
+    icon: "/favicon.png?v=2",
+    shortcut: "/favicon.png?v=2",
+  },
 };
 
 export default function RootLayout({
@@ -47,6 +51,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <head>
+        <link rel="icon" type="image/png" href="/favicon.png?v=2" />
         <link
           rel="stylesheet"
           href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
