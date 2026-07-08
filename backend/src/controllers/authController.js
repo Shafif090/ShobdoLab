@@ -43,7 +43,13 @@ function normalizeRedirectTo(value) {
 
   try {
     const url = new URL(String(value));
-    const allowedProtocols = new Set(["http:", "https:", "mobile:", "exp:"]);
+    const allowedProtocols = new Set([
+      "http:",
+      "https:",
+      "mobile:",
+      "shobdolab:",
+      "exp:",
+    ]);
     if (!allowedProtocols.has(url.protocol)) {
       return null;
     }

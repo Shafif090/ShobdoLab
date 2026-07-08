@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, useWindowDimensions } from "react-native";
 import { Colors } from "@/constants/theme";
 import { AppText as Text } from "@/components/app-typography";
 
@@ -12,10 +12,15 @@ export function AppHeader({
   left?: ReactNode;
   right?: ReactNode;
 }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 380;
+
   return (
-    <View style={styles.header}>
+    <View style={[styles.header, compact && styles.headerCompact]}>
       <View style={styles.headerSide}>{left}</View>
-      <Text numberOfLines={1} style={styles.headerTitle}>
+      <Text
+        numberOfLines={1}
+        style={[styles.headerTitle, compact && styles.headerTitleCompact]}>
         {title}
       </Text>
       <View style={[styles.headerSide, styles.headerSideRight]}>{right}</View>
@@ -31,6 +36,10 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
     minHeight: 72,
   },
+  headerCompact: {
+    paddingTop: 42,
+    paddingBottom: 16,
+  },
   headerSide: {
     flexDirection: "row",
     alignItems: "center",
@@ -45,5 +54,8 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -0.5,
     color: Colors.text,
+  },
+  headerTitleCompact: {
+    fontSize: 28,
   },
 });

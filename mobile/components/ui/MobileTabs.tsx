@@ -1,4 +1,4 @@
-import { Pressable, View } from "react-native";
+import { Pressable, useWindowDimensions, View } from "react-native";
 import { router } from "expo-router";
 import type { Href } from "expo-router";
 import { Colors } from "@/constants/theme";
@@ -9,6 +9,8 @@ import { styles } from "./styles";
 export type TabKey = "home" | "learn" | "revise" | "exercise" | "dictionary";
 
 export function MobileTabs({ active }: { active: TabKey }) {
+  const { width } = useWindowDimensions();
+  const compact = width < 380;
   const items: { key: TabKey; label: string; href: Href; icon: IconName }[] = [
     { key: "home", label: "Home", href: "/(tabs)", icon: "home" },
     { key: "learn", label: "Learn", href: "/(tabs)/learn", icon: "book" },
@@ -28,18 +30,30 @@ export function MobileTabs({ active }: { active: TabKey }) {
   ];
 
   return (
-    <View style={styles.tabBar}>
+    <View
+      style={[
+        styles.tabBar,
+        {
+          paddingHorizontal: compact ? 12 : 20,
+          paddingTop: compact ? 10 : 14,
+          paddingBottom: compact ? 22 : 32,
+        },
+      ]}>
       {items.map((item) => {
         const isActive = item.key === active;
         return (
           <Pressable
             key={item.key}
-            onPress={() => router.push(item.href)}
+            onPress={() => {
+              if (!isActive) {
+                router.replace(item.href);
+              }
+            }}
             style={styles.tabItem}>
             <View style={[styles.tabIcon, isActive && styles.tabIconActive]}>
               <AppIcon
                 name={item.icon}
-                size={20}
+                size={compact ? 18 : 20}
                 color={isActive ? Colors.orange : "#9CA3AF"}
               />
             </View>

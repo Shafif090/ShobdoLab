@@ -1,9 +1,23 @@
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { ApiError, createOAuthSession, getGoogleAuthUrl } from "./api";
+import { Platform } from "react-native";
+import {
+  ApiError,
+  createOAuthSession,
+  getGoogleAuthUrl,
+  type AuthSession,
+} from "./api";
 import { saveAuthSession } from "./session";
 
 WebBrowser.maybeCompleteAuthSession();
+
+function getOAuthRedirectUrl() {
+  if (Platform.OS === "web" && typeof window !== "undefined") {
+    return `${window.location.origin}/auth/callback`;
+  }
+
+  return "shobdolab://auth/callback";
+}
 
 function readOAuthParams(url: string) {
   const parsed = Linking.parse(url);
@@ -44,17 +58,8 @@ function readOAuthParams(url: string) {
   };
 }
 
-export async function signInWithGoogle() {
-  const redirectTo = Linking.createURL("auth/callback");
-  const response = await getGoogleAuthUrl(redirectTo);
-  const result = await WebBrowser.openAuthSessionAsync(response.url, redirectTo);
-
-  if (result.type !== "success") {
-    throw new Error("Google sign in was cancelled.");
-  }
-
-  const oauth = readOAuthParams(result.url);
-
+export async function completeGoogleSignInFromUrl(url: string) {
+  const oauth = readOAuthParams(url);
   if (oauth.errorDescription) {
     throw new Error(oauth.errorDescription);
   }
@@ -72,6 +77,28 @@ export async function signInWithGoogle() {
 
   await saveAuthSession(session);
   return session;
+}
+
+export async function signInWithGoogle() {
+  const redirectTo = getOAuthRedirectUrl();
+  const response = await getGoogleAuthUrl(redirectTo);
+
+  if (Platform.OS === "web") {
+    if (typeof window === "undefined") {
+      throw new Error("Google sign in is unavailable in this environment.");
+    }
+
+    window.location.assign(response.url);
+    return new Promise<AuthSession>(() => undefined);
+  }
+
+  const result = await WebBrowser.openAuthSessionAsync(response.url, redirectTo);
+
+  if (result.type !== "success") {
+    throw new Error("Google sign in was cancelled.");
+  }
+
+  return completeGoogleSignInFromUrl(result.url);
 }
 
 export function getOAuthErrorMessage(exception: unknown) {

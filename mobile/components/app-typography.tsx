@@ -38,7 +38,13 @@ export function AppText({ style, ...props }: ComponentProps<typeof RNText>) {
     flattenedStyle.fontFamily,
   );
 
-  return <RNText {...props} style={[{ fontFamily }, style]} />;
+  return (
+    <RNText
+      maxFontSizeMultiplier={1.15}
+      {...props}
+      style={[{ fontFamily }, style]}
+    />
+  );
 }
 
 export function AppTextInput({
@@ -51,5 +57,11 @@ export function AppTextInput({
     flattenedStyle.fontFamily,
   );
 
-  return <RNTextInput {...props} style={[{ fontFamily }, style]} />;
+  return (
+    <RNTextInput
+      maxFontSizeMultiplier={1.15}
+      {...props}
+      style={[{ fontFamily }, style]}
+    />
+  );
 }

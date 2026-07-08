@@ -1,4 +1,4 @@
-import { Stack, router } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { useEffect, useState } from "react";
 import { getAccessToken } from "@/lib/session";
 
@@ -31,5 +31,17 @@ export default function TabsLayout() {
     return null;
   }
 
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { display: "none" },
+      }}>
+      <Tabs.Screen name="index" />
+      <Tabs.Screen name="learn" />
+      <Tabs.Screen name="revise" />
+      <Tabs.Screen name="exercise" />
+      <Tabs.Screen name="dictionary" />
+    </Tabs>
+  );
 }

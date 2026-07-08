@@ -44,14 +44,27 @@ export function Screen({
   scroll?: boolean;
   contentStyle?: object;
 }) {
+  const { width } = useWindowDimensions();
+  const horizontalPadding = width < 380 ? 16 : width < 430 ? 20 : 24;
   const content = scroll ? (
     <ScrollView
-      contentContainerStyle={[styles.scrollContent, contentStyle]}
+      contentContainerStyle={[
+        styles.scrollContent,
+        { paddingHorizontal: horizontalPadding },
+        contentStyle,
+      ]}
       showsVerticalScrollIndicator={false}>
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.scrollContent, contentStyle]}>{children}</View>
+    <View
+      style={[
+        styles.scrollContent,
+        { paddingHorizontal: horizontalPadding },
+        contentStyle,
+      ]}>
+      {children}
+    </View>
   );
 
   return (
@@ -75,6 +88,9 @@ export function TabScreen({
   right?: ReactNode;
   children: ReactNode;
 }) {
+  const { width } = useWindowDimensions();
+  const horizontalPadding = width < 380 ? 16 : width < 430 ? 20 : 24;
+
   return (
     <Screen scroll={false} contentStyle={styles.tabScreenShell}>
       <View style={styles.tabScreen}>
@@ -88,7 +104,7 @@ export function TabScreen({
           locations={[0, 0.22, 1]}
           style={styles.tabTopGradient}
         />
-        <View style={styles.tabScreenBody}>
+        <View style={[styles.tabScreenBody, { paddingHorizontal: horizontalPadding }]}>
           <AppHeader title={title} right={right} />
           <ScrollView
             contentContainerStyle={styles.tabScrollContent}
@@ -131,7 +147,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
     paddingBottom: 40,
   },
   tabScreenShell: {
@@ -152,7 +167,6 @@ const styles = StyleSheet.create({
   },
   tabScreenBody: {
     flex: 1,
-    paddingHorizontal: 24,
   },
   tabScrollContent: {
     flexGrow: 1,
