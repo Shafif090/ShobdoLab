@@ -302,7 +302,7 @@ export default function ReviseWordsScreen() {
 
     const token = await getAccessToken();
     if (!token) {
-      router.push("/typing");
+      router.replace("/login");
       return;
     }
 
@@ -312,10 +312,10 @@ export default function ReviseWordsScreen() {
     try {
       const response = await startReviseSession(token, {
         type,
-        mode: "mixed",
+        mode: "mcq",
       });
       await saveQuizSessionId(response.session.id);
-      router.push("/typing");
+      router.push("/quiz");
     } catch (exception) {
       await clearQuizSessionId();
       if (exception instanceof ApiError) {

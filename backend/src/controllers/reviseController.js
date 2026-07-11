@@ -3,7 +3,6 @@ import {
   createQuizSessionFromWords,
   getWordsByIds,
   hashValue,
-  normalizeQuizMode,
 } from "./quizSessionBuilder.js";
 
 function jsonError(res, status, code, message, details = null) {
@@ -207,7 +206,7 @@ async function getReviseWordIds(db, userId, type, limit = null) {
 export async function startReviseSession(req, res) {
   try {
     const db = req.supabase || supabase;
-    const { type = "due", mode = "mixed", limit = null } = req.body || {};
+    const { type = "due", limit = null } = req.body || {};
     if (!["due", "weak"].includes(type)) {
       return jsonError(
         res,
@@ -228,7 +227,7 @@ export async function startReviseSession(req, res) {
       db,
       userId: req.userId,
       source: "revise",
-      mode: normalizeQuizMode(mode),
+      mode: "mcq",
       words: selectedWords,
     });
 

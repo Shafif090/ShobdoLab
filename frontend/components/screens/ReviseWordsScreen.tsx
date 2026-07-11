@@ -292,7 +292,7 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
 
     const token = getAccessToken();
     if (!token) {
-      router.push("/typing");
+      router.replace("/login");
       return;
     }
 
@@ -302,10 +302,10 @@ export function ReviseWordsScreen({ type }: { type: ReviseWordsType }) {
     try {
       const response = await startReviseSession(token, {
         type,
-        mode: "mixed",
+        mode: "mcq",
       });
       saveQuizSessionId(response.session.id);
-      router.push("/typing");
+      router.push("/quiz");
     } catch (exception) {
       clearQuizSessionId();
       if (exception instanceof ApiError) {
